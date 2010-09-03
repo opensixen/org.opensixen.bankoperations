@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Bankoperations
+Bundle-SymbolicName: org.opensixen.bankoperations;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: org.opensixen.bankoperations.Activator
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Require-Bundle: org.opensixen.client;bundle-version="1.0.0",
+ org.opensixen.base
+Export-Package: org.opensixen.bankoperations,
+ org.opensixen.bankoperations.form
+Import-Package: org.jdesktop.swingx,
+ org.osgi.framework

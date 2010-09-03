@@ -1,0 +1,108 @@
+--Normas Bancarias
+
+CREATE TABLE c_bankregulation
+(
+  c_bankregulation_id integer NOT NULL,
+  ad_client_id integer NOT NULL,
+  ad_org_id integer NOT NULL,
+  isactive character(1) NOT NULL DEFAULT 'Y'::bpchar,
+  created timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
+  createdby integer NOT NULL,
+  updated timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
+  updatedby integer NOT NULL,
+  value character varying(60) NOT NULL,
+  name character varying(60) NOT NULL,
+  description character varying(255),
+  binarydata bytea,
+  CONSTRAINT c_bankregulation_key PRIMARY KEY (c_bankregulation_id),
+  CONSTRAINT adorg_cbankregulation FOREIGN KEY (ad_org_id)
+      REFERENCES adempiere.ad_org (ad_org_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+WITH (
+  OIDS=TRUE
+);
+ALTER TABLE c_bankregulation OWNER TO adempiere;
+
+
+
+--Remesas Bancarias
+
+CREATE TABLE c_remittance
+(
+  c_remittance_id integer NOT NULL,
+  ad_client_id integer NOT NULL,
+  ad_org_id integer NOT NULL,
+  isactive character(1) NOT NULL DEFAULT 'Y'::bpchar,
+  created timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
+  createdby integer NOT NULL,
+  updated timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
+  updatedby integer NOT NULL,
+  c_bankregulation_id integer NOT NULL,
+  totalamt numeric(22,2),
+  processing character(1),
+  generate character(1),
+  description character varying(255),
+  generatedate timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
+  executedate timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
+  c_bank_id integer,
+  c_bankaccount_id integer,
+  documentno character varying(30),
+  c_doctype_id integer,
+  c_doctypetarget_id integer,
+  processed character(1) NOT NULL DEFAULT 'N'::bpchar,
+  remittancetype_id integer,
+  CONSTRAINT c_remittance_key PRIMARY KEY (c_remittance_id),
+  CONSTRAINT adorg_cremittance FOREIGN KEY (ad_org_id)
+      REFERENCES adempiere.ad_org (ad_org_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT bankregulation_cremittance FOREIGN KEY (c_bankregulation_id)
+      REFERENCES adempiere.c_bankregulation (c_bankregulation_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT bank_cremittance FOREIGN KEY (c_bank_id)
+      REFERENCES adempiere.c_bank (c_bank_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT bankaccount_cremittance FOREIGN KEY (c_bankaccount_id)
+      REFERENCES adempiere.c_bankaccount (c_bankaccount_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+WITH (
+  OIDS=TRUE
+);
+ALTER TABLE c_remittance OWNER TO adempiere;
+
+
+--Lineas de remesas bancarias
+
+CREATE TABLE c_remittanceline
+(
+  c_remittanceline_id integer NOT NULL,
+  ad_client_id integer NOT NULL,
+  ad_org_id integer NOT NULL,
+  isactive character(1) NOT NULL DEFAULT 'Y'::bpchar,
+  created timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
+  createdby integer NOT NULL,
+  updated timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
+  updatedby integer NOT NULL,
+  c_remittance_id integer NOT NULL,
+  c_bpartner_id integer NOT NULL,
+  description character varying(255),
+  linenetamt numeric(22,2),
+  c_invoicepayschedule_id integer,
+  c_payment_id integer,
+  CONSTRAINT c_remittanceline_key PRIMARY KEY (c_remittanceline_id),
+  CONSTRAINT adorg_cremittanceline FOREIGN KEY (ad_org_id)
+      REFERENCES adempiere.ad_org (ad_org_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT remittance_cremittanceline FOREIGN KEY (c_remittance_id)
+      REFERENCES adempiere.c_remittance (c_remittance_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT bpartner_cremittanceline FOREIGN KEY (c_bpartner_id)
+      REFERENCES adempiere.c_bpartner (c_bpartner_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+WITH (
+  OIDS=TRUE
+);
+ALTER TABLE c_remittanceline OWNER TO adempiere;
+
