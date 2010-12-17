@@ -59,32 +59,107 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.opensixen.utils;
+package org.opensixen.bankoperations.xml;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
-import org.opensixen.bankoperations.form.RemittanceSearch;
+import java.io.IOException;
+import java.io.File;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.DocumentBuilder;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.SAXException;
+
+import org.opensixen.process.RemittanceDataSource;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * 
- * RemittanceMouseAdapter
+ * BankDOM
  *
  * @author Alejandro González
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class RemittanceMouseAdapter extends MouseAdapter {
-    /** Descripción de Campos */
+public class BankDOM {
+	
+  
+  /** Lee los datos del xml y pasa al siguiente. */
+	
+  public static void getElementDOM(Node node,RemittanceDataSource remi) {
 
-    RemittanceSearch adaptee;
+	  int type = node.getNodeType();
+	  
+	  switch (type) {
 
-    public RemittanceMouseAdapter( RemittanceSearch adaptee ) {
-        this.adaptee = adaptee;
+      	case Node.DOCUMENT_NODE: {
+      		//Nodo principal de documento, tipo de xml,etc
+      		getElementDOM(((Document)node).getDocumentElement(),remi);
+      		break;
+      	}
+
+      	case Node.ELEMENT_NODE: {
+      		//Creamos objeto de tipo BankNode con este nodo
+      		BankNode.doNode(node,remi);
+      		//Leemos los nodos hijos
+      		NodeList children = node.getChildNodes();
+      		if (children != null) {
+      			int len = children.getLength();
+      			for (int i = 0; i < len; i++)
+    			  	getElementDOM(children.item(i),remi);
+      		}
+
+      		break;
+      	}
+      
     }
 
+  }
+  
+  /**
+   * Parsea el fichero XML y crea el documento
+   * @param fileName
+   * @return Document
+   */
+  public static Document parse(String fileName) {
+    Document document = null;
 
-    public void mouseClicked( MouseEvent e ) {
-        adaptee.mouseClicked( e );
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+    factory.setValidating(false);
+    factory.setNamespaceAware(true);
+
+    try {
+      DocumentBuilder builder = factory.newDocumentBuilder();
+      document = builder.parse( new File(fileName));
+      
+      return document;
+
+    } catch (SAXParseException spe) {
+
+      Exception x = spe;
+      if (spe.getException() != null)
+        x = spe.getException();
+      x.printStackTrace();
+    } catch (SAXException sxe) {
+      // Error generated during parsing
+      Exception x = sxe;
+      if (sxe.getException() != null)
+        x = sxe.getException();
+      x.printStackTrace();
+    } catch (ParserConfigurationException pce) {
+      // Parser with specified options can't be built
+      pce.printStackTrace();
+    } catch (IOException ioe) {
+      // I/O error
+      ioe.printStackTrace();
     }
+
+    return null;
+  }
+
 }
+

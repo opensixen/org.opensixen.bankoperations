@@ -59,32 +59,101 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.opensixen.utils;
+package org.opensixen.process;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import javax.swing.JOptionPane;
 
-import org.opensixen.bankoperations.form.RemittanceSearch;
+import org.compiere.model.MPayment;
+import org.compiere.util.Env;
+import org.compiere.util.Msg;
+import org.opensixen.model.MRemittance;
+import org.opensixen.model.MRemittanceLine;
 
 /**
  * 
- * RemittanceMouseAdapter
+ * RemittancePayments 
  *
  * @author Alejandro González
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class RemittanceMouseAdapter extends MouseAdapter {
-    /** Descripción de Campos */
+public class RemittancePayments {
+	
+	private String trxName;
+	
+	public RemittancePayments(MRemittance remittance){
+		
+		doIt(remittance,true);
+	}
 
-    RemittanceSearch adaptee;
+	
+	public RemittancePayments() {
+	}
 
-    public RemittanceMouseAdapter( RemittanceSearch adaptee ) {
-        this.adaptee = adaptee;
-    }
+	/**
+	 * 
+	 * @param remittance
+	 * @param completeIt
+	 */
 
+	public void doIt(MRemittance remittance,boolean completeIt) {
+		
+		for(MRemittanceLine line : remittance.getLines(true)){
+			if(!createpayment(line,completeIt)){
+				JOptionPane.showMessageDialog(null,Msg.translate(Env.getCtx(), "Payments not save"), "Error", JOptionPane.ERROR_MESSAGE);
+				break;
+			}
+			if(completeIt){
+				remittance.setDocAction( MRemittance.ACTION_Complete );
+				
+				try {
+					remittance.processIt( MRemittance.ACTION_Complete );
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			
+				if (!remittance.save())
+					break;
+			}
+		}
+		
+	}
+	
+	/**
+	 * Crea los pagos y los asocia a la linea de Remesa
+	 * @param line
+	 * @param completeIt
+	 * @return
+	 */
+	
+	private boolean createpayment(MRemittanceLine line,boolean completeIt){
+		MPayment payment = new MPayment(Env.getCtx(),0,trxName);
+		MRemittance remit = new MRemittance(Env.getCtx(),line.getC_Remittance_ID(),trxName);
+		payment.setC_BankAccount_ID(remit.getC_BankAccount_ID());
+		payment.setAmount(Env.getContextAsInt(Env.getCtx(), "C_Currency_ID"), line.getGrandTotal());
+		payment.setC_Invoice_ID(line.getC_Invoice_ID());
+		payment.setC_BPartner_ID(line.getC_BPartner_ID());
+		
+		if(!payment.save())
+			return false;
+		
+		if(completeIt){
+			payment.setDocAction( MPayment.ACTION_Complete );
+			
+			try {
+				payment.processIt( MPayment.ACTION_Complete );
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+			if (!payment.save())
+				return false;
+		}
+		
+		line.setC_Payment_ID(payment.getC_Payment_ID());
+		return line.save(trxName);
+	}
 
-    public void mouseClicked( MouseEvent e ) {
-        adaptee.mouseClicked( e );
-    }
 }

@@ -1,3 +1,64 @@
+ /******* BEGIN LICENSE BLOCK *****
+ * Versión: GPL 2.0/CDDL 1.0/EPL 1.0
+ *
+ * Los contenidos de este fichero están sujetos a la Licencia
+ * Pública General de GNU versión 2.0 (la "Licencia"); no podrá
+ * usar este fichero, excepto bajo las condiciones que otorga dicha 
+ * Licencia y siempre de acuerdo con el contenido de la presente. 
+ * Una copia completa de las condiciones de de dicha licencia,
+ * traducida en castellano, deberá estar incluida con el presente
+ * programa.
+ * 
+ * Adicionalmente, puede obtener una copia de la licencia en
+ * http://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * Este fichero es parte del programa opensiXen.
+ *
+ * OpensiXen es software libre: se puede usar, redistribuir, o
+ * modificar; pero siempre bajo los términos de la Licencia 
+ * Pública General de GNU, tal y como es publicada por la Free 
+ * Software Foundation en su versión 2.0, o a su elección, en 
+ * cualquier versión posterior.
+ *
+ * Este programa se distribuye con la esperanza de que sea útil,
+ * pero SIN GARANTÍA ALGUNA; ni siquiera la garantía implícita 
+ * MERCANTIL o de APTITUD PARA UN PROPÓSITO DETERMINADO. Consulte 
+ * los detalles de la Licencia Pública General GNU para obtener una
+ * información más detallada. 
+ *
+ * TODO EL CÓDIGO PUBLICADO JUNTO CON ESTE FICHERO FORMA PARTE DEL 
+ * PROYECTO OPENSIXEN, PUDIENDO O NO ESTAR GOBERNADO POR ESTE MISMO
+ * TIPO DE LICENCIA O UNA VARIANTE DE LA MISMA.
+ *
+ * El desarrollador/es inicial/es del código es
+ *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
+ *  Indeos Consultoria S.L. - http://www.indeos.es
+ *
+ * Contribuyente(s):
+ *  Alejandro González <alejandro@opensixen.org> 
+ *
+ * Alternativamente, y a elección del usuario, los contenidos de este
+ * fichero podrán ser usados bajo los términos de la Licencia Común del
+ * Desarrollo y la Distribución (CDDL) versión 1.0 o posterior; o bajo
+ * los términos de la Licencia Pública Eclipse (EPL) versión 1.0. Una 
+ * copia completa de las condiciones de dichas licencias, traducida en 
+ * castellano, deberán de estar incluidas con el presente programa.
+ * Adicionalmente, es posible obtener una copia original de dichas 
+ * licencias en su versión original en
+ *  http://www.opensource.org/licenses/cddl1.php  y en  
+ *  http://www.opensource.org/licenses/eclipse-1.0.php
+ *
+ * Si el usuario desea el uso de SU versión modificada de este fichero 
+ * sólo bajo los términos de una o más de las licencias, y no bajo los 
+ * de las otra/s, puede indicar su decisión borrando las menciones a la/s
+ * licencia/s sobrantes o no utilizadas por SU versión modificada.
+ *
+ * Si la presente licencia triple se mantiene íntegra, cualquier usuario 
+ * puede utilizar este fichero bajo cualquiera de las tres licencias que 
+ * lo gobiernan,  GPL 2.0/CDDL 1.0/EPL 1.0.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 package org.opensixen.bankoperations.form;
 
 
@@ -43,11 +104,22 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.jdesktop.swingx.JXTaskPane;
 import org.opensixen.model.I_C_remittanceLine;
+import org.opensixen.model.MRemittance;
 import org.opensixen.model.POFactory;
 import org.opensixen.model.QParam;
+import org.opensixen.model.RVOpenItem;
 import org.opensixen.model.X_C_remittanceLine;
+import org.opensixen.process.RemittanceCreateFile;
 import org.opensixen.utils.RemittanceMouseAdapter;
 import org.opensixen.utils.RemittancePopup;
+
+/**
+ * 
+ * RemittanceSearch
+ *
+ * @author Alejandro González
+ * Nexis Servicios Informáticos http://www.nexis.es
+ */
 
 public class RemittanceSearch extends JPanel implements VetoableChangeListener,ListSelectionListener,ActionListener,TableModelListener {
 
@@ -112,6 +184,8 @@ public class RemittanceSearch extends JPanel implements VetoableChangeListener,L
 		this.add(new JScrollPane(remittance),BorderLayout.CENTER);
 		remittance.getModel().addTableModelListener(this);
 		remittance.addMouseListener( mouseListener );
+		
+		popup.getmFile().addActionListener(this);
 	}
 	
 	/**
@@ -274,10 +348,18 @@ public class RemittanceSearch extends JPanel implements VetoableChangeListener,L
 	}
 
 
+	public int getSelectedRow(){
+		IDColumn id =(IDColumn) remittance.getValueAt(remittance.getSelectedRow(), 0);
+		return id.getRecord_ID() ;
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		// TODO Auto-generated method stub
+
+		if(arg0.getActionCommand().equals(popup.getmFile().getActionCommand())){
+			//Crear nuevo fichero
+			 new RemittanceCreateFile(new MRemittance(Env.getCtx(),getSelectedRow(), null));
+		}
 		
 	}
 
@@ -317,7 +399,9 @@ public class RemittanceSearch extends JPanel implements VetoableChangeListener,L
 		//Lista de objetos de lineas de remesa
 		ArrayList<X_C_remittanceLine> rems = (ArrayList<X_C_remittanceLine>) POFactory.getList(Env.getCtx(),X_C_remittanceLine.class, new QParam(I_C_remittanceLine.COLUMNNAME_C_Remittance_ID,remittance_id.getRecord_ID()));
 		for(X_C_remittanceLine rl : rems){
-			ParentPane.getPanelResults().list.add(rl.getC_InvoicePaySchedule_ID());
+			//ParentPane.getPanelResults().list.add(rl.getC_InvoicePaySchedule_ID());
+			ParentPane.getPanelResults().list.put(rl.getC_Invoice_ID(), new RVOpenItem(rl.getC_Invoice_ID(),rl.getC_InvoicePaySchedule_ID(),rl.getGrandTotal()));
+
 		}
 		
 	}

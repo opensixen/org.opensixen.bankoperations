@@ -59,32 +59,158 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.opensixen.utils;
+package org.opensixen.process;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 
-import org.opensixen.bankoperations.form.RemittanceSearch;
+import javax.swing.JFileChooser;
+
+import org.compiere.util.Env;
+import org.compiere.util.ExtensionFileFilter;
+import org.compiere.util.Msg;
+import org.opensixen.bankoperations.xml.BankDOM;
+import org.opensixen.model.MBankRegulation;
+import org.opensixen.model.MRemittance;
+import org.w3c.dom.Document;
 
 /**
  * 
- * RemittanceMouseAdapter
+ * RemittanceCreateFile
  *
  * @author Alejandro González
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class RemittanceMouseAdapter extends MouseAdapter {
-    /** Descripción de Campos */
+public class RemittanceCreateFile {
 
-    RemittanceSearch adaptee;
+	
+	private static BufferedWriter writer=null;
+	private static int numberregs=0;
+	private MRemittance remit=null;
+	/**
+	 * Constructor
+	 * @param remit
+	 */
+	
+	public RemittanceCreateFile(MRemittance rem) {
+		remit=rem;
+		CreateFile();
+	}
 
-    public RemittanceMouseAdapter( RemittanceSearch adaptee ) {
-        this.adaptee = adaptee;
-    }
+	
+	/**
+	 * Devuelve el writer actual
+	 * @return writer
+	 */
+	
+	public static BufferedWriter getwriter(){
+		  return writer;
+	}
+	
+	
+	/**
+	 * Setea el writer
+	 * @param writer
+	 */
+	
+	public static void setwriter(BufferedWriter writ){
+		  writer=writ;
+	}
+	
+	
+	/**
+	 * Guardar el string al writter
+	 * @param line
+	 */
+	
+	public static void saveLine(String line){
+			
+		try {
+			writer.write(line);
 
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	/**
+	 * Añade una nuevalinea cerrando la anterior
+	 * @param line
+	 */
+	
+	public static void closeLine(){
+			
+		try {
+			writer.write(Env.NL);
+			numberregs++;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+	}
+	
+	
+	/**
+	 * Proceso principal para crear el fichero e iniciar el proceso de lectura del xml
+	 */
+	
+	private void CreateFile(){
+  
+		JFileChooser chooser = new JFileChooser();
+		chooser.setDialogType(JFileChooser.SAVE_DIALOG);
+		chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		chooser.setDialogTitle(Msg.getMsg(Env.getCtx(), "Remittance"));
 
-    public void mouseClicked( MouseEvent e ) {
-        adaptee.mouseClicked( e );
-    }
+		if (chooser.showSaveDialog(null) != JFileChooser.APPROVE_OPTION) 
+			return;
+	
+		File outFile = ExtensionFileFilter.getFile(chooser.getSelectedFile(),chooser.getFileFilter());
+		try { 
+			outFile.createNewFile();
+		} catch (IOException e) {
+				
+		}		
+		
+		try {	
+			FileWriter fwout = new FileWriter (outFile, false);
+			writer = new BufferedWriter(fwout);
+			//Cogemos el datasource
+			RemittanceDataSource source = new RemittanceDataSource(remit);
+
+			//Cargamos el xml
+			MBankRegulation regulation = new MBankRegulation(Env.getCtx(),remit.getC_BankRegulation_ID(),null);
+			Document document = null;
+			document = regulation.getXML();
+			BankDOM.getElementDOM(document,source);
+ 
+			//Cerramos el writer
+			writer.flush();
+			writer.close();
+		
+		}catch (FileNotFoundException fnfe){		
+		
+		}
+		 catch (IOException e){
+			
+		 }
+			
+	}
+	
+	/**
+	 * Devuelve el total de registros escritos hasta el momento 
+	 * @return
+	 */
+	
+	public static int getNumberReg(){
+		return numberregs;
+	}
+	
 }

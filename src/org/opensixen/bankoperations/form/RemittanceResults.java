@@ -1,3 +1,64 @@
+ /******* BEGIN LICENSE BLOCK *****
+ * Versión: GPL 2.0/CDDL 1.0/EPL 1.0
+ *
+ * Los contenidos de este fichero están sujetos a la Licencia
+ * Pública General de GNU versión 2.0 (la "Licencia"); no podrá
+ * usar este fichero, excepto bajo las condiciones que otorga dicha 
+ * Licencia y siempre de acuerdo con el contenido de la presente. 
+ * Una copia completa de las condiciones de de dicha licencia,
+ * traducida en castellano, deberá estar incluida con el presente
+ * programa.
+ * 
+ * Adicionalmente, puede obtener una copia de la licencia en
+ * http://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * Este fichero es parte del programa opensiXen.
+ *
+ * OpensiXen es software libre: se puede usar, redistribuir, o
+ * modificar; pero siempre bajo los términos de la Licencia 
+ * Pública General de GNU, tal y como es publicada por la Free 
+ * Software Foundation en su versión 2.0, o a su elección, en 
+ * cualquier versión posterior.
+ *
+ * Este programa se distribuye con la esperanza de que sea útil,
+ * pero SIN GARANTÍA ALGUNA; ni siquiera la garantía implícita 
+ * MERCANTIL o de APTITUD PARA UN PROPÓSITO DETERMINADO. Consulte 
+ * los detalles de la Licencia Pública General GNU para obtener una
+ * información más detallada. 
+ *
+ * TODO EL CÓDIGO PUBLICADO JUNTO CON ESTE FICHERO FORMA PARTE DEL 
+ * PROYECTO OPENSIXEN, PUDIENDO O NO ESTAR GOBERNADO POR ESTE MISMO
+ * TIPO DE LICENCIA O UNA VARIANTE DE LA MISMA.
+ *
+ * El desarrollador/es inicial/es del código es
+ *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
+ *  Indeos Consultoria S.L. - http://www.indeos.es
+ *
+ * Contribuyente(s):
+ *  Alejandro González <alejandro@opensixen.org> 
+ *
+ * Alternativamente, y a elección del usuario, los contenidos de este
+ * fichero podrán ser usados bajo los términos de la Licencia Común del
+ * Desarrollo y la Distribución (CDDL) versión 1.0 o posterior; o bajo
+ * los términos de la Licencia Pública Eclipse (EPL) versión 1.0. Una 
+ * copia completa de las condiciones de dichas licencias, traducida en 
+ * castellano, deberán de estar incluidas con el presente programa.
+ * Adicionalmente, es posible obtener una copia original de dichas 
+ * licencias en su versión original en
+ *  http://www.opensource.org/licenses/cddl1.php  y en  
+ *  http://www.opensource.org/licenses/eclipse-1.0.php
+ *
+ * Si el usuario desea el uso de SU versión modificada de este fichero 
+ * sólo bajo los términos de una o más de las licencias, y no bajo los 
+ * de las otra/s, puede indicar su decisión borrando las menciones a la/s
+ * licencia/s sobrantes o no utilizadas por SU versión modificada.
+ *
+ * Si la presente licencia triple se mantiene íntegra, cualquier usuario 
+ * puede utilizar este fichero bajo cualquiera de las tres licencias que 
+ * lo gobiernan,  GPL 2.0/CDDL 1.0/EPL 1.0.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 package org.opensixen.bankoperations.form;
 
 
@@ -11,12 +72,15 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Level;
 
 import javax.swing.JPanel;
@@ -42,7 +106,18 @@ import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.jdesktop.swingx.JXTaskPane;
+import org.opensixen.model.MRemittance;
+import org.opensixen.model.RVOpenItem;
 import org.opensixen.process.RemittanceCreate;
+import org.opensixen.process.RemittancePayments;
+
+/**
+ * 
+ * RemittanceResults 
+ *
+ * @author Alejandro González
+ * Nexis Servicios Informáticos http://www.nexis.es
+ */
 
 public class RemittanceResults extends JPanel implements VetoableChangeListener,ListSelectionListener,ActionListener,TableModelListener {
 
@@ -84,7 +159,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	
 	//Variables globales
 	Hashtable<String,String> env = new Hashtable<String,String>();
-	ArrayList<Integer> list = new ArrayList<Integer>();
+	HashMap<Integer,RVOpenItem> list = new HashMap<Integer,RVOpenItem>();
 	private boolean generate=false;
 	int m_WindowNo=0;
 	protected RemittanceFormPanel ParentPane =null;
@@ -185,18 +260,18 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	
 	private void preparetable(){
 
-		String s_sqlFrom="C_InvoicePaySchedule p";
+		String s_sqlFrom="RV_OpenItem p";
 		s_sqlFrom+=" INNER JOIN AD_Org g ON(g.AD_Org_ID=p.AD_Org_ID)";
 		s_sqlFrom+=" INNER JOIN C_Invoice i ON(i.c_invoice_id=p.c_invoice_id)";
 		s_sqlFrom+=" INNER JOIN C_BPartner bp ON(bp.c_bpartner_id=i.c_bpartner_id)";
-		
 		ColumnInfo[] s_layoutRemittance = new ColumnInfo[]{
-        		new ColumnInfo(Msg.translate(Env.getCtx(), "C_InvoicePaySchedule_ID"), "C_InvoicePayschedule_ID", IDColumn.class),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), "C_Invoice_ID"), "p.C_Invoice_ID", IDColumn.class),
         		new ColumnInfo(Msg.translate(Env.getCtx(), "AD_Org_ID"), "g.Name", String.class),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), "Documentno"), "Documentno", String.class),
+        		new ColumnInfo(Msg.translate(Env.getCtx(), "Documentno"), "i.Documentno", String.class),
         		new ColumnInfo(Msg.translate(Env.getCtx(), "C_BPartner_ID"), "bp.Name", String.class),
         		new ColumnInfo(Msg.translate(Env.getCtx(), "DueDate"), "DueDate", Date.class),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), "DueAmt"), "DueAmt", Double.class)};
+        		new ColumnInfo(Msg.translate(Env.getCtx(), "OpenAmt"), "OpenAmt", BigDecimal.class),
+        		new ColumnInfo("","p.C_InvoicePaySchedule_ID",Integer.class)};
 		
 		//Reseteamos el modelo de tabla
 		remittance.setModel(new DefaultTableModel());
@@ -208,7 +283,6 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		
 		m_sql=m_sqlRemittance;
 		m_sqlSelected=m_sqlRemittanceselect;
-		
 
 		remittanceselect.setRowSelectionAllowed(true);
 		remittanceselect.getSelectionModel().addListSelectionListener(this);
@@ -220,7 +294,6 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		remittance.getSelectionModel().addListSelectionListener(this);
         remittance.autoSize();
         remittance.getModel().addTableModelListener(this);
-        
 
 	}
 
@@ -235,7 +308,6 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		ResultSet rs = null;
 		try
 		{
-			
 			//Cargamos la tabla seleccionadas
 			pstmt = DB.prepareStatement(m_sqlSelected, null);
 			rs = pstmt.executeQuery();
@@ -267,7 +339,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	
 	public void refreshWhere(){
 
-		s_sqlWhere=" 1=1";
+		s_sqlWhere=" 1=1 AND i.issotrx='Y'";//Mientras no exista la validación xml
 		s_sqlWhereSelected=s_sqlWhere;
 		String PartialWhere="";
 		String PartialWhereSearch="";
@@ -276,24 +348,21 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 			s_sqlWhere+=val;
 		}
 		//Comprobamos los registros ya seleccionados para guardarlos
+		Iterator<Map.Entry<Integer,RVOpenItem>> it = list.entrySet().iterator();
 
-		for(Integer sel : list){
-			PartialWhere+=sel+",";
-			PartialWhereSearch+=sel+",";
+		while (it.hasNext()) {
+			Map.Entry<Integer,RVOpenItem> e = (Map.Entry<Integer,RVOpenItem>)it.next();
+			
+			//Sentencia Seleccionado
+			PartialWhere+=WhereSelected(e,PartialWhere);
+			
+			//Sentencia No Seleccionado
+			PartialWhereSearch+=WhereNotSelected(e,PartialWhere);
 		}
 		
-		if(list.size()>0){
-			PartialWhere=PartialWhere.substring(0, PartialWhere.length()-1);
-			PartialWhere+=")";
-			PartialWhere=" AND p.C_InvoicePaySchedule_ID IN("+PartialWhere;
-			
-			PartialWhereSearch=PartialWhereSearch.substring(0, PartialWhereSearch.length()-1);
-			PartialWhereSearch+=")";
-			PartialWhereSearch=" AND p.C_InvoicePaySchedule_ID NOT IN("+PartialWhereSearch;
-			
-		}else{
+		if(list.size()<=0)
 			PartialWhere=" AND 1=2"+PartialWhere;
-		}
+			
 		s_sqlWhereSelected+=PartialWhere;
 		s_sqlWhere+=PartialWhereSearch;
 		preparetable();
@@ -301,6 +370,49 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		
 	
 	}
+	
+	
+	private String WhereSelected(Map.Entry<Integer,RVOpenItem> sel,String PartialWhere){
+		String aux="";
+
+		if(PartialWhere.length()>0)
+			aux+=" OR";
+		else
+			aux+=" AND";
+		
+		if(sel.getValue().getC_InvoicePaySchedule_ID()>0)
+			aux+="(";
+		
+		aux+=" p.c_invoice_id IN(";
+		aux+=sel.getKey();
+		aux+=")";
+		
+		if(sel.getValue().getC_InvoicePaySchedule_ID()>0){
+			aux+=" AND p.c_invoicepayschedule_id="+((RVOpenItem)sel.getValue()).getC_InvoicePaySchedule_ID();
+			aux+=")";
+		}
+		return aux;
+	}
+	
+	
+	private String WhereNotSelected(Map.Entry<Integer,RVOpenItem> sel,String PartialWhere){
+		String aux="";
+		aux+=" AND";
+		
+		if(sel.getValue().getC_InvoicePaySchedule_ID()>0)
+			aux+="(";
+		else{
+			aux+=" p.c_invoice_id NOT IN(";
+			aux+=sel.getKey();
+			aux+=")";
+		}
+		if(sel.getValue().getC_InvoicePaySchedule_ID()>0){
+			aux+=" p.c_invoicepayschedule_id<>"+((RVOpenItem)sel.getValue()).getC_InvoicePaySchedule_ID();
+			aux+=" OR p.c_invoicepayschedule_id is null)";
+		}
+		return aux;
+	}
+	
 	
 	/**
 	 * Resetea los valores de seleccion y de consulta
@@ -361,8 +473,10 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
         if (e.getSource().equals(remittance.getModel())&&e.getColumn()==0 && !generate)
 		{
         	IDColumn id = (IDColumn)remittance.getValueAt(remittance.getSelectedRow(), 0);
+        	int schedule=(Integer)remittance.getValueAt(remittance.getSelectedRow(), 6);
+        	BigDecimal dueamt=(BigDecimal)remittance.getValueAt(remittance.getSelectedRow(), 5);
         	if(id.isSelected()){
-        		list.add(id.getRecord_ID());
+        		list.put(id.getRecord_ID(), new RVOpenItem(id.getRecord_ID(),schedule,dueamt));
         		refreshWhere();
         	}
 		}
@@ -384,20 +498,25 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		
 	}
 
-
+	public MRemittance createRemittanceFile(){
+		RemittanceCreate remittance = new RemittanceCreate(list);
+		remittance.setPanelValues(ParentPane.getPanelParams());
+		return remittance.Create();
+		
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 
 		if(arg0.getActionCommand().equals(ConfirmPanel.A_OK)){
 			//Creamos Remesa
+			MRemittance remit=createRemittanceFile();
+			if(remit!=null){
+				RemittancePayments remitpayments= new RemittancePayments();			
+				remitpayments.doIt(remit,true);
 			
-			RemittanceCreate remittance = new RemittanceCreate(list);
-			remittance.setPanelValues(ParentPane.getPanelParams());
-			remittance.Create();
-			
-		}
-		
-	}
+			}
 
+		}
+	}
 }

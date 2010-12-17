@@ -59,32 +59,105 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.opensixen.utils;
+package org.opensixen.bankoperations.xml;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
-import org.opensixen.bankoperations.form.RemittanceSearch;
+import java.util.ArrayList;
+
+import org.opensixen.process.RemittanceDataSource;
+import org.w3c.dom.Node;
 
 /**
  * 
- * RemittanceMouseAdapter
+ * Activator 
  *
  * @author Alejandro González
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class RemittanceMouseAdapter extends MouseAdapter {
-    /** Descripción de Campos */
+public class BankNode {
+	
+	/**
+	 * Descripción de tipos de elementos y datos
+	 */
+	
+	public static final String OperationLine="OPERATIONLINE"; 
+	public static final String OperationData="DATA"; 
+	public static final String OperationWhile="WHILE";
+	public static final String OperationENDWhile="ENDWHILE";
+	
+	public static final String Data_OrgName="ORGNAME";
+	public static final String Data_Duns="DUNS";
+	public static final String Data_GenerateDate="GENERATEDATE";
+	public static final String Data_ExecuteDate="EXECUTEDATE";
+	public static final String Data_DateInvoiced="DATEINVOICED";
+	public static final String Data_AccountNo="ACCOUNTNO";
+	public static final String Data_BPName="BPNAME";
+	public static final String Data_DocumentNo="DOCUMENTNO";
+	public static final String Data_LineTotal="LINETOTAL";
+	public static final String Data_BPAccountNo="BPACCOUNTNO";
+	public static final String Data_TotalAmt="TOTALAMT";
+	
+	private static boolean whilenode=false;
+	private static ArrayList<Node> nodes= new ArrayList<Node>();
+	
+	
+	public static void doNode(Node node,RemittanceDataSource remi){
+		
+		if(node.getNodeName().equals(OperationLine)) {
+			if(whilenode)
+				addNode(node);
+			BankNodeElement.ElementFile(node,remi);
+		}
+		else if(node.getNodeName().equals(OperationData)) {
+			if(whilenode)
+				addNode(node);
+			BankNodeData.ElementData(node,remi);
+		}
+		else if(node.getNodeName().equals(OperationWhile)){
+			whilenode=true;
+		}
+		else if(node.getNodeName().equals(OperationENDWhile)){
+			whilenode=false;
+			//Repetimos los nodos hasta fin de datasource
+			doWhileNodes(remi);
+		}
 
-    RemittanceSearch adaptee;
+	}
+	
+	/**
+	 * Añade nodo a la lista del bloque a repetir
+	 * @param node
+	 */
 
-    public RemittanceMouseAdapter( RemittanceSearch adaptee ) {
-        this.adaptee = adaptee;
-    }
-
-
-    public void mouseClicked( MouseEvent e ) {
-        adaptee.mouseClicked( e );
-    }
+	public static void addNode(Node node){
+		nodes.add(node);
+	}
+	
+	/**
+	 * Devuelve la lista de nodos a repetir
+	 * @return ArrayList<Node>
+	 */
+	
+	public ArrayList<Node> getWhileNodes(){
+		return nodes;
+	}
+	
+	/**
+	 * Repite el bloque entre while tantas veces como registros tenga el datasource
+	 * (A partir del siguiente registro ya que el primero ya se ejecuto)
+	 * @param remi
+	 */
+	
+	private static void doWhileNodes(RemittanceDataSource remi){
+		while (remi.next()){
+			for(Node nod : nodes){
+				doNode(nod,remi);
+			}
+		}
+		//Una vez acabado devolvemos el datasource a un registro capaz de sacar datos
+		remi.previous();
+		nodes.clear();
+	}
+	
 }

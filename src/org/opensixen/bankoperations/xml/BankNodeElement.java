@@ -59,32 +59,61 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.opensixen.utils;
+package org.opensixen.bankoperations.xml;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
-import org.opensixen.bankoperations.form.RemittanceSearch;
+
+import org.opensixen.process.RemittanceCreateFile;
+import org.opensixen.process.RemittanceDataSource;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 /**
  * 
- * RemittanceMouseAdapter
+ * BankNodeElement
  *
  * @author Alejandro González
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class RemittanceMouseAdapter extends MouseAdapter {
-    /** Descripción de Campos */
-
-    RemittanceSearch adaptee;
-
-    public RemittanceMouseAdapter( RemittanceSearch adaptee ) {
-        this.adaptee = adaptee;
-    }
+public class BankNodeElement{
+	
+	//Posibles atributos
+	public static final String Atrib_AddLine="addLine"; //Indica si la linea debe estar en la siguiente fila
 
 
-    public void mouseClicked( MouseEvent e ) {
-        adaptee.mouseClicked( e );
-    }
+	public static void ElementFile(Node m_node,RemittanceDataSource remi) {
+
+		String addLine=null;
+		NamedNodeMap attrs = m_node.getAttributes();
+
+		for (int i = 0; i < attrs.getLength(); i++) {
+			Node attr = attrs.item(i);
+		
+			//Atributo addLine
+			if(attr.getNodeName().equals(Atrib_AddLine)){
+				addLine=attr.getNodeValue();
+			}
+			
+		}
+		formatline(addLine,remi);
+		
+
+	}
+
+	/**
+	 * Realiza las operaciones necesarias a la linea
+	 * @param addLine
+	 * @param remi
+	 */
+
+	private static void formatline(String addLine,RemittanceDataSource remi) {
+
+		if(addLine.equals("Y")){
+			RemittanceCreateFile.closeLine();
+		}
+		
+	}
+	
+
 }

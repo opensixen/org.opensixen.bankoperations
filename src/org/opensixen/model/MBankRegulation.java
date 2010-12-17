@@ -59,32 +59,83 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.opensixen.utils;
+package org.opensixen.model;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Properties;
 
-import org.opensixen.bankoperations.form.RemittanceSearch;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
-/**
- * 
- * RemittanceMouseAdapter
- *
- * @author Alejandro González
- * Nexis Servicios Informáticos http://www.nexis.es
- */
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
-public class RemittanceMouseAdapter extends MouseAdapter {
-    /** Descripción de Campos */
+public class MBankRegulation extends X_C_BankRegulation {
 
-    RemittanceSearch adaptee;
+	/**
+	 * 
+	 * MBankRegulation
+	 *
+	 * @author Alejandro González
+	 * Nexis Servicios Informáticos http://www.nexis.es
+	 */
 
-    public RemittanceMouseAdapter( RemittanceSearch adaptee ) {
-        this.adaptee = adaptee;
-    }
+	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Constructor por defecto
+	 * @param ctx
+	 * @param C_BankRegulation_ID
+	 * @param trxName
+	 */
+	
+	public MBankRegulation(Properties ctx, int C_BankRegulation_ID,
+			String trxName) {
+		super(ctx, C_BankRegulation_ID, trxName);
+		// TODO Auto-generated constructor stub
+	}
 
-    public void mouseClicked( MouseEvent e ) {
-        adaptee.mouseClicked( e );
-    }
+	/**
+	 * 
+	 * @return Documento a partir del xml guardado en la norma
+	 */
+	
+	public Document getXML(){
+		Document document = null;
+	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	    factory.setValidating(false);
+	    factory.setNamespaceAware(true);
+
+	    try {
+	      DocumentBuilder builder = factory.newDocumentBuilder();
+	      //Cogemos el fichero contenido en el registro de norma
+	      document = builder.parse(new ByteArrayInputStream(this.getBinaryData()));
+	      return document;
+
+	    } catch (SAXParseException spe) {
+	      Exception x = spe;
+	      if (spe.getException() != null)
+	        x = spe.getException();
+	      x.printStackTrace();
+	    } catch (SAXException sxe) {
+	      // Error generated during parsing
+	      Exception x = sxe;
+	      if (sxe.getException() != null)
+	        x = sxe.getException();
+	      x.printStackTrace();
+	    } catch (ParserConfigurationException pce) {
+	      // Parser with specified options can't be built
+	      pce.printStackTrace();
+	    } catch (IOException ioe) {
+	      // I/O error
+	      ioe.printStackTrace();
+	    }
+	    
+	    return document;
+	}
+	
+
 }

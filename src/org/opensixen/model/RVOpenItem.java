@@ -59,32 +59,67 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.opensixen.utils;
+package org.opensixen.model;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-
-import org.opensixen.bankoperations.form.RemittanceSearch;
+import java.math.BigDecimal;
 
 /**
  * 
- * RemittanceMouseAdapter
+ * RVOpenItem
  *
  * @author Alejandro González
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class RemittanceMouseAdapter extends MouseAdapter {
-    /** Descripción de Campos */
+public class RVOpenItem {
 
-    RemittanceSearch adaptee;
-
-    public RemittanceMouseAdapter( RemittanceSearch adaptee ) {
-        this.adaptee = adaptee;
-    }
-
-
-    public void mouseClicked( MouseEvent e ) {
-        adaptee.mouseClicked( e );
-    }
+	private int C_Invoice_ID=0;
+	private int C_InvoicePaySchedule_ID=0;
+	private BigDecimal dueamt=BigDecimal.ZERO;
+	
+	/**
+	 * 
+	 * Constructor estandar
+	 */
+	
+	public RVOpenItem(){
+		
+	}
+	
+	public RVOpenItem(int invoice,int schedule,BigDecimal amt){
+		C_Invoice_ID=invoice;
+		C_InvoicePaySchedule_ID=schedule;
+		dueamt=amt;
+	}
+	
+	/**
+	 * Visualizadores de la clase
+	 * @return
+	 */
+	
+	public int getC_Invoice_ID(){
+		return C_Invoice_ID;
+	}
+	
+	public void setC_Invoice_ID(int invoice){
+		C_Invoice_ID=invoice;
+	}
+	
+	public int getC_InvoicePaySchedule_ID(){
+		return C_InvoicePaySchedule_ID;
+	}
+	
+	public void setC_InvoicePaySchedule_ID(int invoice){
+		C_InvoicePaySchedule_ID=invoice;
+	}
+	
+	public BigDecimal getDueAmt(){
+		return dueamt;
+	}
+	
+	public void setDueAmt(BigDecimal amt){
+		dueamt=amt;
+	}
+	
+	
 }

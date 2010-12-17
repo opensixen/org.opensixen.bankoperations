@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension
-         point="org.opensixen.osgi.interfaces.IFormPanel">
-      <client
-            class="org.opensixen.bankoperations.form.RemittanceFormPanel">
-      </client>
-   </extension>
 
 </plugin>
