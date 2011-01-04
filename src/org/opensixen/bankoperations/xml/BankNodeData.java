@@ -194,9 +194,7 @@ public class BankNodeData {
 		
 		//En el caso de fechas, formateo
 		if(formatdate!=null){
-			System.out.println("Fecha sin formatear="+finalvalue+",formato de fecha="+formatdate);
 			finalvalue=formatdate(finalvalue,formatdate);
-			System.out.println("Fecha formateada="+finalvalue);
 		}
 		
 		//Limpiamos el string de espacios blancos
@@ -240,6 +238,7 @@ public class BankNodeData {
 	private static String formatdate(String finalvalue, String formatdate) {
 		String cadenaFecha=null;
 		SimpleDateFormat formato = new SimpleDateFormat(formatdate);
+		//Formato estándar de fecha guardada en bd
 		SimpleDateFormat toDate= new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 		try {
 			

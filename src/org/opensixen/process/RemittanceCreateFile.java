@@ -64,8 +64,10 @@ package org.opensixen.process;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 
 import javax.swing.JFileChooser;
 
@@ -91,6 +93,10 @@ public class RemittanceCreateFile {
 	private static BufferedWriter writer=null;
 	private static int numberregs=0;
 	private MRemittance remit=null;
+	
+	//Codificacion
+	private static String codification="ISO-8859-15";//Codificacion del fichero en windows
+	private static String lineend="\r\n";//Fin de linea formato windows
 	/**
 	 * Constructor
 	 * @param remit
@@ -148,7 +154,8 @@ public class RemittanceCreateFile {
 	public static void closeLine(){
 			
 		try {
-			writer.write(Env.NL);
+
+			writer.write(lineend);
 			numberregs++;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -180,8 +187,9 @@ public class RemittanceCreateFile {
 		}		
 		
 		try {	
-			FileWriter fwout = new FileWriter (outFile, false);
-			writer = new BufferedWriter(fwout);
+			//FileWriter fwout = new FileWriter (outFile, false);
+			
+			writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile),codification));
 			//Cogemos el datasource
 			RemittanceDataSource source = new RemittanceDataSource(remit);
 

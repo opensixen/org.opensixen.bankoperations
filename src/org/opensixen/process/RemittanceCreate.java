@@ -96,7 +96,7 @@ public class RemittanceCreate {
 	
     
     /**
-	 * Creamos Remesa en base de datos a partir de Lineas de factura (C_InvoicePaySchedule_ID)
+	 * Creamos Remesa en base de datos a partir de Lineas de factura
 	 */
 	
 	

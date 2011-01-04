@@ -63,6 +63,7 @@ package org.opensixen.bankoperations.form;
 
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -83,6 +84,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.event.ListSelectionEvent;
@@ -91,6 +94,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import org.compiere.apps.ConfirmPanel;
+import org.compiere.apps.Waiting;
 import org.compiere.grid.ed.VDate;
 import org.compiere.grid.ed.VLookup;
 import org.compiere.minigrid.ColumnInfo;
@@ -136,7 +140,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	private ConfirmPanel confirm =  new ConfirmPanel(true);
 	private CPanel minitablepanel = new CPanel();
 	private CPanel SelectAllPanel = new CPanel();
-	
+	private Waiting wait;
 	//Organizacion de busqueda
 	private CLabel lOrg = new CLabel();
 	private VLookup vOrg;
@@ -593,13 +597,15 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 
 		if(arg0.getActionCommand().equals(ConfirmPanel.A_OK)){
 			//Creamos Remesa
+			setBusy(true);
 			MRemittance remit=createRemittanceFile();
-			/*if(remit!=null){
+			
+			if(remit!=null){
 				RemittancePayments remitpayments= new RemittancePayments();			
 				remitpayments.doIt(remit,true);
 			
-			}*/
-
+			}
+			setBusy(false);
 		}
 		else if(arg0.getActionCommand().equals(SelectAll.getActionCommand())){
 			//Seleccionamos todos los registros
@@ -610,4 +616,24 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 			DSelectAll(false);
 		}
 	}
+	
+	/**
+	 * Espera de proceso remesa
+	 * @param busy
+	 */
+	
+	private void setBusy(boolean busy){
+		if(busy){
+			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			wait = new Waiting(new JFrame(), Msg.translate(Env.getCtx(), "Processing"), true, 0);
+
+		}
+		else{
+			setCursor(Cursor.getDefaultCursor());
+			wait.dispose();
+			JOptionPane.showMessageDialog(null, Msg.translate(Env.getCtx(), "C_Remittance"), Msg.translate(Env.getCtx(), "RemittanceOK"), JOptionPane.INFORMATION_MESSAGE);
+
+		}
+	}
+	
 }
