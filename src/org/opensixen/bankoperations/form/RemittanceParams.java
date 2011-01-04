@@ -199,7 +199,7 @@ public class RemittanceParams extends JPanel implements VetoableChangeListener {
 	 * @return Fecha de Envio
 	 */
 	
-	public Timestamp getSendDate(){
+	public Timestamp getGenerateDate(){
 		return vSendDate.getTimestamp();
 	}
 	

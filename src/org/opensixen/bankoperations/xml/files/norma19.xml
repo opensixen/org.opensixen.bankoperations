@@ -36,10 +36,10 @@
 	<DATA type="TEXT" fillvalue=" " length="2">80</DATA>
 	<DATA type="DB" fillvalue="0" length="9">DUNS</DATA>
 	<DATA type="TEXT" fillvalue=" " length="3">000</DATA>
-	<DATA type="DB" fillvalue="0" length="12" >DOCUMENTNO</DATA>
-	<DATA type="DB" fillvalue=" " length="40" >BPNAME</DATA>
+	<DATA type="DB" fillvalue=" " length="12" align="LEFT" >DOCUMENTNO</DATA>
+	<DATA type="DB" fillvalue=" " length="40" align="LEFT" >BPNAME</DATA>
 	<DATA type="DB" fillvalue="0" length="20">BPACCOUNTNO</DATA>
-	<DATA type="DB" fillvalue="0" length="10" trim=".,">LINETOTAL</DATA>
+	<DATA type="DB" fillvalue="0" length="10" trim=".," align="RIGHT">LINETOTAL</DATA>
 	<DATA type="FREE" fillvalue=" " length="16"></DATA>
         <DATA type="TEXT" fillvalue=" " length="30" >FACTURA N:</DATA>
         <DATA type="DB" fillvalue=" " length="10" >DOCUMENTNO</DATA>
@@ -54,7 +54,7 @@
 	<DATA type="FREE" fillvalue=" " length="12"></DATA>
 	<DATA type="FREE" fillvalue=" " length="40"></DATA>
 	<DATA type="FREE" fillvalue=" " length="20"></DATA>
-	<DATA type="DB" fillvalue="0" length="10" trim=".,">TOTALAMT</DATA>
+	<DATA type="DB" fillvalue="0" length="10" trim=".," align="RIGHT">TOTALAMT</DATA>
 	<DATA type="FREE" fillvalue=" " length="6"></DATA>	
 	<DATA type="COUNTDOM" fillvalue="0" length="10"></DATA>
 	<DATA type="COUNTREG" fillvalue="0" length="10"></DATA>
@@ -62,15 +62,15 @@
 	<DATA type="FREE" fillvalue=" " length="18"></DATA>
      </OPERATIONLINE>
      <OPERATIONLINE name="Total General" addLine="Y">
-        <DATA type="TEXT" fillvalue=" " length="2" >58</DATA>
+        <DATA type="TEXT" fillvalue=" " length="2" >59</DATA>
 	<DATA type="TEXT" fillvalue=" " length="2">80</DATA>
 	<DATA type="DB" fillvalue="0" length="9">DUNS</DATA>
 	<DATA type="TEXT" fillvalue=" " length="3">000</DATA>
 	<DATA type="FREE" fillvalue=" " length="12"></DATA>
 	<DATA type="FREE" fillvalue=" " length="40"></DATA>
-	<DATA type="TEXT" fillvalue="0" length="4">1</DATA>
+	<DATA type="TEXT" fillvalue="0" length="4" align="RIGHT">1</DATA>
 	<DATA type="FREE" fillvalue=" " length="16"></DATA>
-	<DATA type="DB" fillvalue="0" length="10" trim=".,">TOTALAMT</DATA>
+	<DATA type="DB" fillvalue="0" length="10" trim=".," align="RIGHT">TOTALAMT</DATA>
 	<DATA type="FREE" fillvalue=" " length="6"></DATA>	
 	<DATA type="COUNTDOM" fillvalue="0" length="10"></DATA>
 	<DATA type="COUNTTOTAL" fillvalue="0" length="10"></DATA>
@@ -78,4 +78,3 @@
 	<DATA type="FREE" fillvalue=" " length="18"></DATA>
      </OPERATIONLINE>
   </BANKOPERATION>
-

@@ -98,6 +98,7 @@ import org.compiere.minigrid.IDColumn;
 import org.compiere.minigrid.MiniTable;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
+import org.compiere.swing.CCheckBox;
 import org.compiere.swing.CLabel;
 import org.compiere.swing.CPanel;
 import org.compiere.util.CLogger;
@@ -134,6 +135,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	private JXTaskPane remittanceselectpanel = new JXTaskPane();
 	private ConfirmPanel confirm =  new ConfirmPanel(true);
 	private CPanel minitablepanel = new CPanel();
+	private CPanel SelectAllPanel = new CPanel();
 	
 	//Organizacion de busqueda
 	private CLabel lOrg = new CLabel();
@@ -150,6 +152,14 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	//Fecha facturacion/cobro hasta
 	private CLabel lToInvoiced = new CLabel();
 	private VDate vToInvoiced;
+	
+	//Seleccionar todos los registros
+	private CLabel lSelectAll = new CLabel();
+    private CCheckBox SelectAll = new CCheckBox();
+    
+	//Deseleccionar todos los registros
+	private CLabel lDSelectAll = new CLabel();
+    private CCheckBox DSelectAll = new CCheckBox();
 	
 	//Sql busqueda
 	private String s_sqlWhere=" 1=1";
@@ -191,7 +201,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		remittanceselectpanel.add(new JScrollPane(remittanceselect));
 		remittanceselectpanel.setTitle(Msg.translate(Env.getCtx(), "RemittanceSelect"));
 		minitablepanel.add(remittanceselectpanel,BorderLayout.NORTH);
-		
+		minitablepanel.add(SelectAllPanel,BorderLayout.SOUTH);
 		minitablepanel.add(new JScrollPane(remittance),BorderLayout.CENTER);
 
 		confirm.addActionListener(this);
@@ -221,7 +231,12 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		searchpane.add( vFromInvoiced,new GridBagConstraints( 1,1,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
 		searchpane.add( lToInvoiced,new GridBagConstraints( 2,1,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
 		searchpane.add( vToInvoiced,new GridBagConstraints( 3,1,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
-
+		
+		//Inicializamos el panel de seleccionar todos
+		SelectAllPanel.add(lSelectAll);
+		SelectAllPanel.add(SelectAll);
+		SelectAllPanel.add(lDSelectAll);
+		SelectAllPanel.add(DSelectAll);
 	}
 	
 	/**
@@ -252,6 +267,18 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		vToInvoiced = new VDate();
 		lToInvoiced.setText(Msg.translate(Env.getCtx(), "ToDateInvoiced"));
 		lToInvoiced.setLabelFor(vToInvoiced);
+		
+		//Seleccionar todos
+		lSelectAll.setText(Msg.translate(Env.getCtx(), "Select All"));
+		lSelectAll.setLabelFor(SelectAll);
+		SelectAll.setActionCommand("SelectAll");
+		SelectAll.addActionListener(this);
+		
+		//DeSeleccionar todos
+		lDSelectAll.setText(Msg.translate(Env.getCtx(), "DeSelect All"));
+		lDSelectAll.setLabelFor(DSelectAll);
+		DSelectAll.setActionCommand("DSelectAll");
+		DSelectAll.addActionListener(this);
 	}
 
 	/**
@@ -365,6 +392,11 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 			
 		s_sqlWhereSelected+=PartialWhere;
 		s_sqlWhere+=PartialWhereSearch;
+		if(vFromInvoiced.getTimestamp()!=null)
+			s_sqlWhere+=" AND DueDate>=TO_TIMESTAMP('"+vFromInvoiced.getTimestamp()+"','YYYY-MM-DD')";
+		if(vToInvoiced.getTimestamp()!=null)
+			s_sqlWhere+=" AND DueDate<=TO_TIMESTAMP('"+vToInvoiced.getTimestamp()+"','YYYY-MM-DD')";
+
 		preparetable();
 		executeQuery();
 		
@@ -448,6 +480,44 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		
 	}
 	
+	/**
+	 * Seleccionamos todos los registros posibles
+	 * @param select
+	 */
+	
+	private void SelectAll(boolean select){
+		
+		int totalrows=remittance.getRowCount();
+		for(int i=0;i<totalrows;i++){
+			IDColumn id = (IDColumn)remittance.getModel().getValueAt(i,0);
+			id.setSelected(select);
+			//Selecciono el registro
+			selectregister(i);
+			
+		}
+		//Una vez seleccionados llamo al refrescar sentencia
+		refreshWhere();
+	}
+	
+	/**
+	 * Eliminamos la seleccion en todos los registros 
+	 * @param select
+	 */
+	
+	private void DSelectAll(boolean select){
+		
+		int totalrows=remittanceselect.getRowCount();
+		for(int i=0;i<totalrows;i++){
+			IDColumn id = (IDColumn)remittanceselect.getModel().getValueAt(i,0);
+			id.setSelected(select);
+			//Selecciono el registro
+			Dselectregister(i);
+			
+		}
+		//Una vez seleccionados llamo al refrescar sentencia
+		refreshWhere();
+	}
+	
 	@Override
 	public void vetoableChange(PropertyChangeEvent arg0)
 			throws PropertyVetoException {
@@ -472,25 +542,38 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		//Caso desde tabla de busqueda
         if (e.getSource().equals(remittance.getModel())&&e.getColumn()==0 && !generate)
 		{
-        	IDColumn id = (IDColumn)remittance.getValueAt(remittance.getSelectedRow(), 0);
-        	int schedule=(Integer)remittance.getValueAt(remittance.getSelectedRow(), 6);
-        	BigDecimal dueamt=(BigDecimal)remittance.getValueAt(remittance.getSelectedRow(), 5);
-        	if(id.isSelected()){
-        		list.put(id.getRecord_ID(), new RVOpenItem(id.getRecord_ID(),schedule,dueamt));
-        		refreshWhere();
-        	}
+        	selectregister(remittance.getSelectedRow());
+    		refreshWhere();
 		}
         //Caso desde tabla de seleccionados
         if (e.getSource().equals(remittanceselect.getModel())&&e.getColumn()==0 && !generate)
 		{
-        	IDColumn id = (IDColumn)remittanceselect.getValueAt(remittanceselect.getSelectedRow(), 0);
-        	if(!id.isSelected()){
-        		list.remove(id.getRecord_ID());
-        		refreshWhere();
-        	}
+        	//IDColumn id = (IDColumn)remittanceselect.getValueAt(remittanceselect.getSelectedRow(), 0);
+        	Dselectregister(remittanceselect.getSelectedRow());
+        	refreshWhere();
+
 		}
        
     }    // tableChanged
+	
+	private void selectregister(int row){
+		
+    	IDColumn id = (IDColumn)remittance.getValueAt(row, 0);
+    	int schedule=(Integer)remittance.getValueAt(row, 6);
+    	BigDecimal dueamt=(BigDecimal)remittance.getValueAt(row, 5);
+    	if(id.isSelected()){
+    		list.put(id.getRecord_ID(), new RVOpenItem(id.getRecord_ID(),schedule,dueamt));
+
+    	}
+	}
+	
+	private void Dselectregister(int row){
+		
+    	IDColumn id = (IDColumn)remittanceselect.getValueAt(row, 0);
+       	if(!id.isSelected()){
+    		list.remove(id.getRecord_ID());
+    	}
+	}
 
 	@Override
 	public void valueChanged(ListSelectionEvent arg0) {
@@ -511,12 +594,20 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		if(arg0.getActionCommand().equals(ConfirmPanel.A_OK)){
 			//Creamos Remesa
 			MRemittance remit=createRemittanceFile();
-			if(remit!=null){
+			/*if(remit!=null){
 				RemittancePayments remitpayments= new RemittancePayments();			
 				remitpayments.doIt(remit,true);
 			
-			}
+			}*/
 
+		}
+		else if(arg0.getActionCommand().equals(SelectAll.getActionCommand())){
+			//Seleccionamos todos los registros
+			SelectAll(true);
+		}
+		else if(arg0.getActionCommand().equals(DSelectAll.getActionCommand())){
+			//Deseleccionamos todos los registros
+			DSelectAll(false);
 		}
 	}
 }

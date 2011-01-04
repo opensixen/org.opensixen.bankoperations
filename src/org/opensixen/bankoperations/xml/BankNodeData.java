@@ -88,6 +88,10 @@ public class BankNodeData {
 	public static final String Atrib_Initialpos="initialpos";//Indica el valor desde donde se sacara un substring hasta initialpos+length
 	public static final String Atrib_formatdate="formatdate";//Formato de fecha
 	public static final String Atrib_Trim="trim";//Valores a eliminar del string
+	public static final String Atrib_Align="align";//Alineacion del campo, posibles valores LEFT , RIGHT
+
+	public static final String Atrib_AlignLeft="LEFT";
+	public static final String Atrib_AlignRight="RIGHT";
 	
 	//Valores de atributo type
 	public static final String Atrib_Type_Text="TEXT";
@@ -102,6 +106,8 @@ public class BankNodeData {
 		String finalvalue=null;
 		String fillvalue=null;
 		String trim=null;
+		String align=null;
+		
 		int length=-1;
 		int initialpos=-1;
 		String formatdate=null;
@@ -155,10 +161,13 @@ public class BankNodeData {
   		  	else if(attr.getNodeName().equals(Atrib_Trim)){
   		  		trim=attr.getNodeValue();
   		  	}
+  		  	else if(attr.getNodeName().equals(Atrib_Align)){
+  		  		align=attr.getNodeValue();
+  		  	}
   	  	}
 		
 		//Llamamos a la funcion de formateo
-		finalvalue= formatvalue(finalvalue,fillvalue,length,initialpos,formatdate,trim);
+		finalvalue= formatvalue(finalvalue,fillvalue,length,initialpos,formatdate,trim,align);
 		//Guardamos el valor ya formateado
 		RemittanceCreateFile.saveLine(finalvalue);
 		
@@ -175,7 +184,7 @@ public class BankNodeData {
 	 */
 	
 	private static String formatvalue(String finalvalue, String fillvalue,
-			int length, int initialpos, String formatdate,String trim) {
+			int length, int initialpos, String formatdate,String trim,String align) {
 		//Nos aseguramos que el valor no sea nulo
 		if(finalvalue==null)
 			finalvalue="";
@@ -183,21 +192,29 @@ public class BankNodeData {
 		if(trim!=null)
 		  finalvalue=trimString(finalvalue,trim);
 		
-		//Limpiamos el string de espacios blancos
-		finalvalue=finalvalue.trim();
-		//Longitud
-		finalvalue=adjustlength(finalvalue,fillvalue,length);
-		
 		//En el caso de fechas, formateo
 		if(formatdate!=null){
+			System.out.println("Fecha sin formatear="+finalvalue+",formato de fecha="+formatdate);
 			finalvalue=formatdate(finalvalue,formatdate);
+			System.out.println("Fecha formateada="+finalvalue);
 		}
+		
+		//Limpiamos el string de espacios blancos
+		finalvalue=finalvalue.trim();
+
 		
 		//En el caso en el que sea un substring de la cadena
 		if(initialpos>=0){
-			String subs=finalvalue.substring(initialpos, (initialpos+length));
+			int finallength=(initialpos+length)>finalvalue.length()?finalvalue.length():(initialpos+length);
+			if (finallength<0)
+				finallength=0;
+			
+			String subs=finalvalue.substring(initialpos, finallength);
 			finalvalue=subs;
 		}
+		//Longitud
+		finalvalue=adjustlength(finalvalue,fillvalue,length,align);
+		
 		return finalvalue;
 	}
 	
@@ -223,8 +240,10 @@ public class BankNodeData {
 	private static String formatdate(String finalvalue, String formatdate) {
 		String cadenaFecha=null;
 		SimpleDateFormat formato = new SimpleDateFormat(formatdate);
+		SimpleDateFormat toDate= new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 		try {
-			Date date = formato.parse(finalvalue);
+			
+			Date date = toDate.parse(finalvalue);
 			cadenaFecha = formato.format(date);
 		} catch (ParseException e) {
 			e.printStackTrace();
@@ -242,14 +261,25 @@ public class BankNodeData {
 	 * @return
 	 */
 	
-	private static String adjustlength(String finalvalue,String fillvalue,int length){
+	private static String adjustlength(String finalvalue,String fillvalue,int length,String align){
 		//Ajustar el valor a la longitud pedida
 		int cont=finalvalue.length();
 		String aux=finalvalue;
+		
+		//Por defecto alineamos a la izquierda
+		if(align==null)
+			align=Atrib_AlignLeft;
+		
 		if(cont<length){
 			while(aux.length()<length){
-				aux=fillvalue+aux;
+				if(align.equals(Atrib_AlignRight))
+					aux=fillvalue+aux;
+				else if(align.equals(Atrib_AlignLeft))
+					aux=aux+fillvalue;
 			}
+		}else if(cont>length){
+			
+			aux=finalvalue.substring(0, length);
 		}
 		return aux;
 	}

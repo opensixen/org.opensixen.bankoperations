@@ -119,6 +119,7 @@ public class RemittanceDataSource {
 
 	public String getWhere(){
 		String sql=" WHERE 1=1";
+		//sql+=" AND ba.isactive='Y'";
 		sql+=" AND r.c_remittance_id="+remittance.getC_Remittance_ID();
 		
 		return sql;
@@ -137,13 +138,13 @@ public class RemittanceDataSource {
 		sql.append(" INNER JOIN C_Invoice i ON i.c_invoice_id=ip.c_invoice_id");
 		sql.append(" INNER JOIN C_RemittanceLine rl ON (rl.c_invoice_id=ip.c_invoice_id AND rl.c_invoicepayschedule_id is null) OR (rl.c_invoicepayschedule_id=ip.c_invoicepayschedule_id)");
 		sql.append(" INNER JOIN C_Remittance r ON r.c_remittance_id=rl.c_remittance_id");
-		sql.append(" LEFT  JOIN C_BankAccount ba ON ba.c_bankaccount_id=r.c_bankaccount_id");
+		sql.append(" LEFT  JOIN C_BankAccount ba ON ba.c_bankaccount_id=r.c_bankaccount_id ");
 		sql.append(" INNER JOIN C_BPartner bp ON bp.c_bpartner_id=i.c_bpartner_id");
-		sql.append(" LEFT  JOIN C_BP_Bankaccount bpk ON bpk.c_bpartner_id=bp.c_bpartner_id");
+		sql.append(" LEFT  JOIN C_BP_Bankaccount bpk ON (bpk.c_bpartner_id=bp.c_bpartner_id AND bpk.isactive='Y')");
 		
 		//Añadimos el where a la sentencia
 		sql.append(getWhere());
-		
+		sql.append(" ORDER BY i.documentno");
 		log.info("SQL: " + sql.toString());
 		try {
 			PreparedStatement pstmt = DB.prepareStatement(sql.toString(), trxName);

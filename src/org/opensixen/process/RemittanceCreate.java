@@ -129,6 +129,10 @@ public class RemittanceCreate {
 		//Cuenta bancaria
 		remit.setC_Bank_ID((Integer)params.getBank());
 		remit.setC_BankAccount_ID((Integer)params.getBankAccount());
+		//Fecha de generacion
+		remit.setGenerateDate(params.getGenerateDate());
+		//Fecha de cargo
+		remit.setExecuteDate(params.getExecuteDate());
 
 		if(!remit.save())
 			return null;
@@ -210,8 +214,8 @@ public class RemittanceCreate {
 			JOptionPane.showMessageDialog(null, Msg.translate(Env.getCtx(), "Null BankAccount"), Msg.translate(Env.getCtx(), "C_BankAccount"), JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
-		if(params.getSendDate()==null){
-			JOptionPane.showMessageDialog(null, Msg.translate(Env.getCtx(), "Null SendDate"), Msg.translate(Env.getCtx(), "SendDate"), JOptionPane.ERROR_MESSAGE);
+		if(params.getGenerateDate()==null){
+			JOptionPane.showMessageDialog(null, Msg.translate(Env.getCtx(), "Null GenerateDate"), Msg.translate(Env.getCtx(), "SendDate"), JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 		if(params.getExecuteDate()==null){

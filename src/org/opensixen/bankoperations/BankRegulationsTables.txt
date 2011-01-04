@@ -1,108 +1,95 @@
---Normas Bancarias
-
-CREATE TABLE c_bankregulation
-(
-  c_bankregulation_id integer NOT NULL,
-  ad_client_id integer NOT NULL,
-  ad_org_id integer NOT NULL,
-  isactive character(1) NOT NULL DEFAULT 'Y'::bpchar,
-  created timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
-  createdby integer NOT NULL,
-  updated timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
-  updatedby integer NOT NULL,
-  value character varying(60) NOT NULL,
-  name character varying(60) NOT NULL,
-  description character varying(255),
-  binarydata bytea,
-  CONSTRAINT c_bankregulation_key PRIMARY KEY (c_bankregulation_id),
-  CONSTRAINT adorg_cbankregulation FOREIGN KEY (ad_org_id)
-      REFERENCES adempiere.ad_org (ad_org_id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION
-)
-WITH (
-  OIDS=TRUE
-);
-ALTER TABLE c_bankregulation OWNER TO adempiere;
-
-
-
---Remesas Bancarias
-
-CREATE TABLE c_remittance
-(
-  c_remittance_id integer NOT NULL,
-  ad_client_id integer NOT NULL,
-  ad_org_id integer NOT NULL,
-  isactive character(1) NOT NULL DEFAULT 'Y'::bpchar,
-  created timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
-  createdby integer NOT NULL,
-  updated timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
-  updatedby integer NOT NULL,
-  c_bankregulation_id integer NOT NULL,
-  totalamt numeric(22,2),
-  processing character(1),
-  generate character(1),
-  description character varying(255),
-  generatedate timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
-  executedate timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
-  c_bank_id integer,
-  c_bankaccount_id integer,
-  documentno character varying(30),
-  c_doctype_id integer,
-  c_doctypetarget_id integer,
-  processed character(1) NOT NULL DEFAULT 'N'::bpchar,
-  remittancetype_id integer,
-  CONSTRAINT c_remittance_key PRIMARY KEY (c_remittance_id),
-  CONSTRAINT adorg_cremittance FOREIGN KEY (ad_org_id)
-      REFERENCES adempiere.ad_org (ad_org_id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT bankregulation_cremittance FOREIGN KEY (c_bankregulation_id)
-      REFERENCES adempiere.c_bankregulation (c_bankregulation_id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT bank_cremittance FOREIGN KEY (c_bank_id)
-      REFERENCES adempiere.c_bank (c_bank_id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT bankaccount_cremittance FOREIGN KEY (c_bankaccount_id)
-      REFERENCES adempiere.c_bankaccount (c_bankaccount_id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION
-)
-WITH (
-  OIDS=TRUE
-);
-ALTER TABLE c_remittance OWNER TO adempiere;
-
-
---Lineas de remesas bancarias
-
-CREATE TABLE c_remittanceline
-(
-  c_remittanceline_id integer NOT NULL,
-  ad_client_id integer NOT NULL,
-  ad_org_id integer NOT NULL,
-  isactive character(1) NOT NULL DEFAULT 'Y'::bpchar,
-  created timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
-  createdby integer NOT NULL,
-  updated timestamp without time zone NOT NULL DEFAULT ('now'::text)::timestamp(6) with time zone,
-  updatedby integer NOT NULL,
-  c_remittance_id integer NOT NULL,
-  c_bpartner_id integer NOT NULL,
-  description character varying(255),
-  linenetamt numeric(22,2),
-  c_invoicepayschedule_id integer,
-  c_payment_id integer,
-  CONSTRAINT c_remittanceline_key PRIMARY KEY (c_remittanceline_id),
-  CONSTRAINT adorg_cremittanceline FOREIGN KEY (ad_org_id)
-      REFERENCES adempiere.ad_org (ad_org_id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT remittance_cremittanceline FOREIGN KEY (c_remittance_id)
-      REFERENCES adempiere.c_remittance (c_remittance_id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT bpartner_cremittanceline FOREIGN KEY (c_bpartner_id)
-      REFERENCES adempiere.c_bpartner (c_bpartner_id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION
-)
-WITH (
-  OIDS=TRUE
-);
-ALTER TABLE c_remittanceline OWNER TO adempiere;
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  <BANKOPERATION value="19">
+      <OPERATIONLINE name="Cabecera" moveDB="N" addLine="N">
+        <DATA type="TEXT" fillvalue=" " length="2" >51</DATA>
+	<DATA type="TEXT" fillvalue=" " length="2">80</DATA>
+	<DATA type="DB" fillvalue="0" length="9">DUNS</DATA>
+	<DATA type="TEXT" fillvalue=" " length="3">001</DATA>
+	<DATA type="DB" fillvalue="0" length="6" formatdate="ddMMyy">GENERATEDATE</DATA>
+	<DATA type="FREE" fillvalue=" " length="6"></DATA>
+	<DATA type="DB" fillvalue=" " length="40">ORGNAME</DATA>
+	<DATA type="FREE" fillvalue=" " length="20"></DATA>	
+	<DATA type="DB" fillvalue="0" initialpos="0" length="4">ACCOUNTNO</DATA>
+	<DATA type="DB" fillvalue="0" initialpos="4" length="4">ACCOUNTNO</DATA>
+	<DATA type="FREE" fillvalue=" " length="12"></DATA>
+	<DATA type="FREE" fillvalue=" " length="40"></DATA>
+	<DATA type="FREE" fillvalue=" " length="14"></DATA>
+     </OPERATIONLINE>
+     <OPERATIONLINE name="Ordenante" addLine="Y">
+        <DATA type="TEXT" fillvalue=" " length="2" >53</DATA>
+	<DATA type="TEXT" fillvalue=" " length="2">80</DATA>
+	<DATA type="DB" fillvalue="0" length="9">DUNS</DATA>
+	<DATA type="TEXT" fillvalue=" " length="3">001</DATA>
+	<DATA type="DB" fillvalue="0" length="6" formatdate="ddMMyy">GENERATEDATE</DATA>
+	<DATA type="DB" fillvalue="0" length="6" formatdate="ddMMyy">EXECUTEDATE</DATA>
+	<DATA type="DB" fillvalue=" " length="40">ORGNAME</DATA>
+	<DATA type="DB" fillvalue="0" length="20">ACCOUNTNO</DATA>
+	<DATA type="FREE" fillvalue=" " length="8"></DATA>
+        <DATA type="TEXT" fillvalue=" " length="2" >01</DATA>
+	<DATA type="FREE" fillvalue=" " length="10"></DATA>
+	<DATA type="FREE" fillvalue=" " length="40"></DATA>
+	<DATA type="FREE" fillvalue=" " length="14"></DATA>
+     </OPERATIONLINE>
+     <WHILE></WHILE>
+     <OPERATIONLINE name="Individual Obligatorio" addLine="Y">
+        <DATA type="TEXT" fillvalue=" " length="2" >56</DATA>
+	<DATA type="TEXT" fillvalue=" " length="2">80</DATA>
+	<DATA type="DB" fillvalue="0" length="9">DUNS</DATA>
+	<DATA type="TEXT" fillvalue=" " length="3">001</DATA>
+	<DATA type="DB" fillvalue="0" length="12" >DOCUMENTNO</DATA>
+	<DATA type="DB" fillvalue=" " length="40" >BPNAME</DATA>
+	<DATA type="DB" fillvalue="0" length="20">BPACCOUNTNO</DATA>
+	<DATA type="DB" fillvalue="0" length="10" trim=".,">LINETOTAL</DATA>
+	<DATA type="FREE" fillvalue=" " length="16"></DATA>
+        <DATA type="TEXT" fillvalue=" " length="30" >FACTURA N:</DATA>
+        <DATA type="DB" fillvalue=" " length="10" >DOCUMENTNO</DATA>
+	<DATA type="FREE" fillvalue=" " length="8"></DATA>
+     </OPERATIONLINE>
+     <OPERATIONLINE name="Individual OPCIONAL" addLine="Y">
+        <DATA type="TEXT" fillvalue=" " length="2" >56</DATA>
+	<DATA type="TEXT" fillvalue=" " length="2">81</DATA>
+	<DATA type="DB" fillvalue="0" length="9">DUNS</DATA>
+	<DATA type="TEXT" fillvalue=" " length="3">001</DATA>
+	<DATA type="DB" fillvalue="0" length="12" >DOCUMENTNO</DATA>
+	<DATA type="TEXT" fillvalue=" " length="40" >FACTURA N </DATA>
+	<DATA type="DB" fillvalue="0" length="20">DOCUMENTNO</DATA>
+	<DATA type="FREE" fillvalue="0" length="10" ></DATA>
+	<DATA type="FREE" fillvalue=" " length="16"></DATA>
+        <DATA type="FREE" fillvalue=" " length="30" ></DATA>
+        <DATA type="FREE" fillvalue=" " length="10" ></DATA>
+	<DATA type="FREE" fillvalue=" " length="8"></DATA>
+     </OPERATIONLINE>
+     <ENDWHILE></ENDWHILE>
+     <OPERATIONLINE name="Total Ordenante" addLine="Y">
+        <DATA type="TEXT" fillvalue=" " length="2" >58</DATA>
+	<DATA type="TEXT" fillvalue=" " length="2">80</DATA>
+	<DATA type="DB" fillvalue="0" length="9">DUNS</DATA>
+	<DATA type="TEXT" fillvalue=" " length="3">001</DATA>
+	<DATA type="FREE" fillvalue=" " length="12"></DATA>
+	<DATA type="FREE" fillvalue=" " length="40"></DATA>
+	<DATA type="FREE" fillvalue=" " length="20"></DATA>
+	<DATA type="DB" fillvalue="0" length="10" trim=".,">TOTALAMT</DATA>
+	<DATA type="FREE" fillvalue=" " length="6"></DATA>	
+	<DATA type="COUNTDOM" fillvalue="0" length="10"></DATA>
+	<DATA type="COUNTREG" fillvalue="0" length="10"></DATA>
+	<DATA type="FREE" fillvalue=" " length="20"></DATA>
+	<DATA type="FREE" fillvalue=" " length="18"></DATA>
+     </OPERATIONLINE>
+     <OPERATIONLINE name="Total General" addLine="Y">
+        <DATA type="TEXT" fillvalue=" " length="2" >58</DATA>
+	<DATA type="TEXT" fillvalue=" " length="2">80</DATA>
+	<DATA type="DB" fillvalue="0" length="9">DUNS</DATA>
+	<DATA type="TEXT" fillvalue=" " length="3">001</DATA>
+	<DATA type="FREE" fillvalue=" " length="12"></DATA>
+	<DATA type="FREE" fillvalue=" " length="40"></DATA>
+	<DATA type="TEXT" fillvalue="0" length="4">1</DATA>
+	<DATA type="FREE" fillvalue=" " length="16"></DATA>
+	<DATA type="DB" fillvalue="0" length="10" trim=".,">TOTALAMT</DATA>
+	<DATA type="FREE" fillvalue=" " length="6"></DATA>	
+	<DATA type="COUNTDOM" fillvalue="0" length="10"></DATA>
+	<DATA type="COUNTTOTAL" fillvalue="0" length="10"></DATA>
+	<DATA type="FREE" fillvalue=" " length="20"></DATA>
+	<DATA type="FREE" fillvalue=" " length="18"></DATA>
+     </OPERATIONLINE>
+  </BANKOPERATION>
 
