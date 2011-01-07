@@ -399,8 +399,7 @@ public class RemittanceSearch extends JPanel implements VetoableChangeListener,L
 		//Lista de objetos de lineas de remesa
 		ArrayList<X_C_remittanceLine> rems = (ArrayList<X_C_remittanceLine>) POFactory.getList(Env.getCtx(),X_C_remittanceLine.class, new QParam(I_C_remittanceLine.COLUMNNAME_C_Remittance_ID,remittance_id.getRecord_ID()));
 		for(X_C_remittanceLine rl : rems){
-			//ParentPane.getPanelResults().list.add(rl.getC_InvoicePaySchedule_ID());
-			ParentPane.getPanelResults().list.put(rl.getC_Invoice_ID(), new RVOpenItem(rl.getC_Invoice_ID(),rl.getC_InvoicePaySchedule_ID(),rl.getGrandTotal()));
+			ParentPane.getPanelResults().list.put(rl.getC_Invoice_ID(), new RVOpenItem(rl));
 
 		}
 		

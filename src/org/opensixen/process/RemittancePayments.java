@@ -134,6 +134,7 @@ public class RemittancePayments {
 		payment.setAmount(Env.getContextAsInt(Env.getCtx(), "C_Currency_ID"), line.getGrandTotal());
 		payment.setC_Invoice_ID(line.getC_Invoice_ID());
 		payment.setC_BPartner_ID(line.getC_BPartner_ID());
+		payment.setDateTrx(remit.getExecuteDate());
 		
 		if(!payment.save())
 			return false;

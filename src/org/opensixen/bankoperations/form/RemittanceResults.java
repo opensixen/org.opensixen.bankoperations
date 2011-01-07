@@ -140,6 +140,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	private ConfirmPanel confirm =  new ConfirmPanel(true);
 	private CPanel minitablepanel = new CPanel();
 	private CPanel SelectAllPanel = new CPanel();
+	protected RemittanceFormPanel ParentPane =null;
 	private Waiting wait;
 	//Organizacion de busqueda
 	private CLabel lOrg = new CLabel();
@@ -176,10 +177,8 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	HashMap<Integer,RVOpenItem> list = new HashMap<Integer,RVOpenItem>();
 	private boolean generate=false;
 	int m_WindowNo=0;
-	protected RemittanceFormPanel ParentPane =null;
 	protected CLogger log = CLogger.getCLogger(getClass());
 
-	
 	public RemittanceResults(){
 		fillPicks();
 		initComponents();
@@ -296,13 +295,13 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		s_sqlFrom+=" INNER JOIN C_Invoice i ON(i.c_invoice_id=p.c_invoice_id)";
 		s_sqlFrom+=" INNER JOIN C_BPartner bp ON(bp.c_bpartner_id=i.c_bpartner_id)";
 		ColumnInfo[] s_layoutRemittance = new ColumnInfo[]{
-        		new ColumnInfo(Msg.translate(Env.getCtx(), "C_Invoice_ID"), "p.C_Invoice_ID", IDColumn.class),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), "AD_Org_ID"), "g.Name", String.class),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), "Documentno"), "i.Documentno", String.class),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), "C_BPartner_ID"), "bp.Name", String.class),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), "DueDate"), "DueDate", Date.class),
-        		new ColumnInfo(Msg.translate(Env.getCtx(), "OpenAmt"), "OpenAmt", BigDecimal.class),
-        		new ColumnInfo("","p.C_InvoicePaySchedule_ID",Integer.class)};
+        		new ColumnInfo(RVOpenItem.ColumnInvoice, "p.C_Invoice_ID", IDColumn.class),
+        		new ColumnInfo(RVOpenItem.ColumnOrg, "g.Name", String.class),
+        		new ColumnInfo(RVOpenItem.ColumnDocumentNo, "i.Documentno", String.class),
+        		new ColumnInfo(RVOpenItem.ColumnPartner, "bp.Name", String.class),
+        		new ColumnInfo(RVOpenItem.ColumnDueDate, "DueDate", Date.class),
+        		new ColumnInfo(RVOpenItem.ColumnOpenAmt, "OpenAmt", BigDecimal.class),
+        		new ColumnInfo(RVOpenItem.ColumnSchedule,"p.C_InvoicePaySchedule_ID",Integer.class)};
 		
 		//Reseteamos el modelo de tabla
 		remittance.setModel(new DefaultTableModel());
@@ -334,22 +333,22 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	 */
 
 	public void executeQuery(){
+
 		generate=true;
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		try
 		{
 			//Cargamos la tabla seleccionadas
-			pstmt = DB.prepareStatement(m_sqlSelected, null);
-			rs = pstmt.executeQuery();
-			remittanceselect.loadTable(rs);
-			
+			loadTableSelects(list);
+
 			pstmt = DB.prepareStatement(m_sql, null);
 			rs = pstmt.executeQuery();
 			remittance.loadTable(rs);
 
 			//Seleccionamos las necesarias
 			SelectRows();
+
 		}
 		catch (Exception e)
 		{
@@ -363,6 +362,40 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		}
 		generate=false;
 	}
+	
+	public void loadTableSelects(HashMap<Integer,RVOpenItem> listitems)
+	{
+		//  Clear Table
+		remittanceselect.setRowCount(0);
+
+		try
+		{
+			Iterator<Map.Entry<Integer,RVOpenItem>> it = list.entrySet().iterator();
+
+			while (it.hasNext()) {
+				Map.Entry<Integer,RVOpenItem> e = (Map.Entry<Integer,RVOpenItem>)it.next();
+				RVOpenItem rs =(RVOpenItem)e.getValue();
+		
+				int row = remittanceselect.getRowCount();
+				remittanceselect.setRowCount(row+1);
+
+				for (int col = 0; col < remittanceselect.getLayoutInfo().length; col++)
+				{
+					Object data = null;
+					String c = remittanceselect.getLayoutInfo()[col].getColHeader();
+					data= rs.getValue(c);
+					//  store
+					remittanceselect.setValueAt(data, row, col);
+				}
+				
+			}
+		}
+		catch (Exception e)
+		{
+			log.log(Level.SEVERE, "", e);
+		}
+			
+	}	//	loadTable
 	
 	/**
 	 * Actualiza valores de busqueda y tabla de resultados
@@ -416,14 +449,14 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		else
 			aux+=" AND";
 		
-		if(sel.getValue().getC_InvoicePaySchedule_ID()>0)
+		if((Integer)sel.getValue().getC_InvoicePaySchedule_ID()>0)
 			aux+="(";
 		
 		aux+=" p.c_invoice_id IN(";
 		aux+=sel.getKey();
 		aux+=")";
 		
-		if(sel.getValue().getC_InvoicePaySchedule_ID()>0){
+		if((Integer)sel.getValue().getC_InvoicePaySchedule_ID()>0){
 			aux+=" AND p.c_invoicepayschedule_id="+((RVOpenItem)sel.getValue()).getC_InvoicePaySchedule_ID();
 			aux+=")";
 		}
@@ -435,14 +468,14 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		String aux="";
 		aux+=" AND";
 		
-		if(sel.getValue().getC_InvoicePaySchedule_ID()>0)
+		if((Integer)sel.getValue().getC_InvoicePaySchedule_ID()>0)
 			aux+="(";
 		else{
 			aux+=" p.c_invoice_id NOT IN(";
 			aux+=sel.getKey();
 			aux+=")";
 		}
-		if(sel.getValue().getC_InvoicePaySchedule_ID()>0){
+		if((Integer)sel.getValue().getC_InvoicePaySchedule_ID()>0){
 			aux+=" p.c_invoicepayschedule_id<>"+((RVOpenItem)sel.getValue()).getC_InvoicePaySchedule_ID();
 			aux+=" OR p.c_invoicepayschedule_id is null)";
 		}
@@ -485,22 +518,24 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	}
 	
 	/**
-	 * Seleccionamos todos los registros posibles
+	 * Seleccionamos todos los registros
 	 * @param select
 	 */
 	
 	private void SelectAll(boolean select){
-		
+		generate=true;
 		int totalrows=remittance.getRowCount();
 		for(int i=0;i<totalrows;i++){
 			IDColumn id = (IDColumn)remittance.getModel().getValueAt(i,0);
 			id.setSelected(select);
 			//Selecciono el registro
 			selectregister(i);
-			
 		}
+
 		//Una vez seleccionados llamo al refrescar sentencia
 		refreshWhere();
+
+		generate=false;
 	}
 	
 	/**
@@ -546,6 +581,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		//Caso desde tabla de busqueda
         if (e.getSource().equals(remittance.getModel())&&e.getColumn()==0 && !generate)
 		{
+
         	selectregister(remittance.getSelectedRow());
     		refreshWhere();
 		}
@@ -560,23 +596,31 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
        
     }    // tableChanged
 	
+	/**
+	 * Selecciona un registro
+	 * @param row
+	 */
+	
 	private void selectregister(int row){
-		
-    	IDColumn id = (IDColumn)remittance.getValueAt(row, 0);
-    	int schedule=(Integer)remittance.getValueAt(row, 6);
-    	BigDecimal dueamt=(BigDecimal)remittance.getValueAt(row, 5);
-    	if(id.isSelected()){
-    		list.put(id.getRecord_ID(), new RVOpenItem(id.getRecord_ID(),schedule,dueamt));
 
-    	}
+    	IDColumn id = (IDColumn)remittance.getValueAt(row, 0);
+
+    	if(id.isSelected())
+    		list.put(id.getRecord_ID(), new RVOpenItem(id.getRecord_ID(),remittance,row));
+
 	}
+	
+	/**
+	 * Eliminamos la seleccion de un registro
+	 * @param row
+	 */
 	
 	private void Dselectregister(int row){
 		
     	IDColumn id = (IDColumn)remittanceselect.getValueAt(row, 0);
-       	if(!id.isSelected()){
+       	if(!id.isSelected())
     		list.remove(id.getRecord_ID());
-    	}
+    
 	}
 
 	@Override
@@ -584,6 +628,11 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		// TODO Auto-generated method stub
 		
 	}
+	
+	/**
+	 * Procede a crear la remesa en base de dato
+	 * @return
+	 */
 
 	public MRemittance createRemittanceFile(){
 		RemittanceCreate remittance = new RemittanceCreate(list);

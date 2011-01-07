@@ -62,6 +62,21 @@
 package org.opensixen.model;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+
+import org.compiere.minigrid.IDColumn;
+import org.compiere.minigrid.MiniTable;
+import org.compiere.model.MBPartner;
+import org.compiere.model.MInvoice;
+import org.compiere.model.MOrg;
+import org.compiere.util.Env;
+import org.compiere.util.Msg;
 
 /**
  * 
@@ -73,9 +88,18 @@ import java.math.BigDecimal;
 
 public class RVOpenItem {
 
-	private int C_Invoice_ID=0;
-	private int C_InvoicePaySchedule_ID=0;
-	private BigDecimal dueamt=BigDecimal.ZERO;
+	private Hashtable<String,Object> RowValues = new Hashtable<String,Object>();
+	
+	/**
+	 * Cabeceras columnas tabla
+	 */
+	public static final String ColumnInvoice=Msg.translate(Env.getCtx(), "C_Invoice_ID");
+	public static final String ColumnOrg=Msg.translate(Env.getCtx(), "AD_Org_ID");
+	public static final String ColumnDocumentNo=Msg.translate(Env.getCtx(), "Documentno");
+	public static final String ColumnPartner=Msg.translate(Env.getCtx(), "C_BPartner_ID");
+	public static final String ColumnDueDate=Msg.translate(Env.getCtx(), "DueDate");
+	public static final String ColumnOpenAmt=Msg.translate(Env.getCtx(), "OpenAmt");
+	public static final String ColumnSchedule=Msg.translate(Env.getCtx(), "");
 	
 	/**
 	 * 
@@ -85,11 +109,61 @@ public class RVOpenItem {
 	public RVOpenItem(){
 		
 	}
+
+	public RVOpenItem(X_C_remittanceLine rl){
+		
+		MInvoice inv = new MInvoice(Env.getCtx(),rl.getC_Invoice_ID(),null);
+		MOrg org = new MOrg(Env.getCtx(),inv.getAD_Org_ID(),null);
+		MBPartner partner = new MBPartner(Env.getCtx(),inv.getC_BPartner_ID(),null);
+		//ID
+		setValue(ColumnInvoice,new IDColumn(rl.getC_Invoice_ID()));
+		//Posible payschedule
+		setValue(ColumnSchedule,rl.getC_InvoicePaySchedule_ID());
+		//Org
+		setValue(ColumnOrg,org.getName());
+		//DocumentNo
+		setValue(ColumnDocumentNo,inv.getDocumentNo());
+		//Partner
+		setValue(ColumnPartner,partner.getName());
+		//DueDate
+		setValue(ColumnDueDate,inv.getDateInvoiced());
+		//Total
+		setValue(ColumnOpenAmt,rl.getGrandTotal());
+	}
 	
-	public RVOpenItem(int invoice,int schedule,BigDecimal amt){
-		C_Invoice_ID=invoice;
-		C_InvoicePaySchedule_ID=schedule;
-		dueamt=amt;
+	public RVOpenItem(Integer record_ID, MiniTable remittance, int row) {
+
+		setValues(remittance,row);
+	}
+	
+	private void setValues(MiniTable tab, int rowselected){
+		
+		for (int col = 0; col < tab.getLayoutInfo().length; col++)
+		{
+			//Cogemos el valor de la cabecera
+			String c = tab.getLayoutInfo()[col].getColHeader();
+			//Lo añadimos al hash
+			setValue(c,tab.getValueAt(rowselected, col));
+		}
+	}
+	
+	private void setValue(String header,Object value  ){
+		RowValues.put(header,value);
+	}
+
+	public Object getValue(String header){
+		Object data = null;
+		//Comprobamos los registros ya seleccionados para guardarlos
+		Iterator<Map.Entry<String,Object>> it = RowValues.entrySet().iterator();
+
+		while (it.hasNext()) {
+			Map.Entry<String,Object> e = (Map.Entry<String,Object>)it.next();
+			if(e.getKey().equals(header)){
+				data=e.getValue();
+				break;
+			}
+		}
+		return data;
 	}
 	
 	/**
@@ -98,28 +172,18 @@ public class RVOpenItem {
 	 */
 	
 	public int getC_Invoice_ID(){
-		return C_Invoice_ID;
-	}
-	
-	public void setC_Invoice_ID(int invoice){
-		C_Invoice_ID=invoice;
+		IDColumn id = (IDColumn)getValue(ColumnInvoice );
+    	return id.getRecord_ID();
 	}
 	
 	public int getC_InvoicePaySchedule_ID(){
-		return C_InvoicePaySchedule_ID;
+		return (Integer)getValue("");
 	}
 	
-	public void setC_InvoicePaySchedule_ID(int invoice){
-		C_InvoicePaySchedule_ID=invoice;
-	}
 	
 	public BigDecimal getDueAmt(){
-		return dueamt;
+		return (BigDecimal)getValue(ColumnOpenAmt );
 	}
-	
-	public void setDueAmt(BigDecimal amt){
-		dueamt=amt;
-	}
-	
+
 	
 }
