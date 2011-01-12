@@ -112,6 +112,7 @@ public class RemittanceDataSource {
 		loadData();
 	}
 	
+
 	/**
 	 * Obtiene el where de la sentencia sql
 	 * @return
@@ -131,17 +132,18 @@ public class RemittanceDataSource {
 		
 		// ArrayList donde guardaremos los datos de la remesa
 		ArrayList<M_RemittanceLine> list = new ArrayList<M_RemittanceLine>();
-		StringBuffer sql = new StringBuffer ( "SELECT r.c_remittance_id,g.name as orgname,f.DUNS,r.generatedate,ba.accountno as accountno,r.executedate,bp.name as partnername,i.documentno,bpk.accountno as partneraccount,rl.grandtotal,i.dateinvoiced,r.totalamt");
-		sql.append(" FROM RV_OpenItem ip");
-		sql.append(" INNER JOIN AD_Org g ON g.ad_org_id=ip.ad_org_id");
-		sql.append(" INNER JOIN AD_OrgInfo f ON f.ad_org_id=g.ad_org_id");
-		sql.append(" INNER JOIN C_Invoice i ON i.c_invoice_id=ip.c_invoice_id");
-		sql.append(" INNER JOIN C_RemittanceLine rl ON (rl.c_invoice_id=ip.c_invoice_id AND rl.c_invoicepayschedule_id is null) OR (rl.c_invoicepayschedule_id=ip.c_invoicepayschedule_id)");
-		sql.append(" INNER JOIN C_Remittance r ON r.c_remittance_id=rl.c_remittance_id");
-		sql.append(" LEFT  JOIN C_BankAccount ba ON ba.c_bankaccount_id=r.c_bankaccount_id ");
-		sql.append(" INNER JOIN C_BPartner bp ON bp.c_bpartner_id=i.c_bpartner_id");
-		sql.append(" LEFT  JOIN C_BP_Bankaccount bpk ON (bpk.c_bpartner_id=bp.c_bpartner_id AND bpk.isactive='Y')");
-		
+		StringBuffer sql=null;
+
+			sql = new StringBuffer ( "SELECT r.c_remittance_id,g.name as orgname,f.DUNS,r.generatedate,ba.accountno as accountno,r.executedate,bp.name as partnername,i.documentno,bpk.accountno as partneraccount,rl.grandtotal,i.dateinvoiced,r.totalamt");
+			sql.append(" FROM C_Remittance r ");
+			sql.append(" INNER JOIN AD_Org g ON g.ad_org_id=r.ad_org_id");
+			sql.append(" INNER JOIN AD_OrgInfo f ON f.ad_org_id=g.ad_org_id");
+			sql.append(" INNER JOIN C_RemittanceLine rl ON rl.c_remittance_id=r.c_remittance_id");
+			sql.append(" INNER JOIN C_Invoice i ON i.c_invoice_id=rl.c_invoice_id");
+			sql.append(" LEFT  JOIN C_BankAccount ba ON ba.c_bankaccount_id=r.c_bankaccount_id ");
+			sql.append(" INNER JOIN C_BPartner bp ON bp.c_bpartner_id=i.c_bpartner_id");
+			sql.append(" LEFT  JOIN C_BP_Bankaccount bpk ON (bpk.c_bpartner_id=bp.c_bpartner_id AND bpk.isactive='Y')");
+
 		//Añadimos el where a la sentencia
 		sql.append(getWhere());
 		sql.append(" ORDER BY i.documentno");
@@ -168,6 +170,7 @@ public class RemittanceDataSource {
 		
 		// Guardamos la lista en m_RemittanceLines
 		m_RemittanceLines = new M_RemittanceLine[list.size()];
+		System.out.println("Total de lineas,="+list.size());
 		list.toArray(m_RemittanceLines);
 	}	
 	
