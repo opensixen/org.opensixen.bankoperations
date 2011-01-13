@@ -9,6 +9,9 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.opensixen.client;bundle-version="1.0.0",
  org.opensixen.base
 Export-Package: org.opensixen.bankoperations,
- org.opensixen.bankoperations.form
+ org.opensixen.bankoperations.form,
+ org.opensixen.bankoperations.xml,
+ org.opensixen.model,
+ org.opensixen.source
 Import-Package: org.jdesktop.swingx,
  org.osgi.framework

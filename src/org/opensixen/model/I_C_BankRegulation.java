@@ -213,4 +213,17 @@ public interface I_C_BankRegulation
 	  * Search key for the record in the format required - must be unique
 	  */
 	public String getValue();
+	
+    /** Column name Classname */
+    public static final String COLUMNNAME_Classname = "Classname";
+
+	/** Set Classname.
+	  * 
+	  */
+	public void setClassname (String Classname);
+
+	/** Get Classname.
+	  * 
+	  */
+	public String getClassname();
 }

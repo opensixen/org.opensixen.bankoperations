@@ -76,6 +76,8 @@ import org.compiere.util.Msg;
 import org.opensixen.bankoperations.xml.BankDOM;
 import org.opensixen.model.MBankRegulation;
 import org.opensixen.model.MRemittance;
+import org.opensixen.source.RemittanceDataSource;
+import org.opensixen.source.SearchSource;
 import org.w3c.dom.Document;
 
 /**
@@ -189,7 +191,8 @@ public class RemittanceCreateFile {
 			
 			writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile),codification));
 			//Cogemos el datasource
-			RemittanceDataSource source = new RemittanceDataSource(remit);
+			RemittanceDataSource source = SearchSource.SearchRemittance(remit);
+			source.init(remit);
 
 			//Cargamos el xml
 			MBankRegulation regulation = new MBankRegulation(Env.getCtx(),remit.getC_BankRegulation_ID(),null);

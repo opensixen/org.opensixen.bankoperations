@@ -212,4 +212,16 @@ public class X_C_BankRegulation extends PO implements I_C_BankRegulation, I_Pers
 	{
 		return (String)get_Value(COLUMNNAME_Value);
 	}
+
+
+	public void setClassname(String Classname) 
+	{
+		set_Value (COLUMNNAME_Classname, Classname);
+	}
+
+
+	public String getClassname() 
+	{
+		return (String)get_Value(COLUMNNAME_Classname);
+	}
 }

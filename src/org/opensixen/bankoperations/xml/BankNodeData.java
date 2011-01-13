@@ -67,7 +67,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.opensixen.process.RemittanceCreateFile;
-import org.opensixen.process.RemittanceDataSource;
+import org.opensixen.source.RemittanceDataSource;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 

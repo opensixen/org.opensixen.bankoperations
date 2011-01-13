@@ -70,8 +70,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.SAXException;
-
-import org.opensixen.process.RemittanceDataSource;
+import org.opensixen.source.RemittanceDataSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
