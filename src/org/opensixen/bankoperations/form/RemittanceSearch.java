@@ -320,25 +320,39 @@ public class RemittanceSearch extends JPanel implements VetoableChangeListener,L
 			throws PropertyVetoException {
 		
 		if(arg0.getSource().equals(vBPartner)){
-			env.remove("C_BPartner_ID");
+			RemoveWhereValue("C_BPartner_ID");
 			
 			if(arg0.getNewValue()!=null)
-				env.put("C_BPartner_ID", " AND p.C_BPartner_ID="+arg0.getNewValue());
+				PutWhereValue("C_BPartner_ID", " AND p.C_BPartner_ID="+arg0.getNewValue());
+				//env.put("C_BPartner_ID", " AND p.C_BPartner_ID="+arg0.getNewValue());
 
 		}
 		else if(arg0.getSource().equals(vRemittance)){
-			env.remove("C_Remittance_ID");
+			RemoveWhereValue("C_Remittance_ID");
 			
 			if(arg0.getNewValue()!=null)
-				env.put("C_Remittance_ID", " AND p.C_Remittance_ID="+arg0.getNewValue());
+				PutWhereValue("C_Remittance_ID", " AND p.C_Remittance_ID="+arg0.getNewValue());
+			//	env.put("C_Remittance_ID", " AND p.C_Remittance_ID="+arg0.getNewValue());
 
 		}
+		refreshAll();
+
+	}
+	
+	protected void PutWhereValue(String column,String value){
+		env.put(column, value);
 		
+	}
+	
+	protected void RemoveWhereValue(String column){
+		env.remove(column);
+	}
+
+	public void refreshAll(){
 		refreshWhere();
 		resetPanelResults();
 		refreshPanelResults();
 	}
-
 
 
 	@Override
@@ -403,6 +417,10 @@ public class RemittanceSearch extends JPanel implements VetoableChangeListener,L
 
 		}
 		
+	}
+	
+	protected VLookup getRemittanceLookup(){
+		return vRemittance;
 	}
 	
 	/**

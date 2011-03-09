@@ -217,7 +217,11 @@ public class RemittanceResultsSelected extends JPanel implements ActionListener 
 			if(remit!=null){
 				RemittancePayments remitpayments= new RemittancePayments();			
 				remitpayments.doIt(remit,true);
-			
+				//Una vez acabados los procesos pasamos la remesa creada al listado actualizado
+				if(ParentPane!=null){
+					RemittanceSearch search = ParentPane.getPanelSearch();
+					search.getRemittanceLookup().refresh();
+				}
 			}
 			setBusy(false);
 		}

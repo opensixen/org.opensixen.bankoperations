@@ -69,16 +69,19 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
 import java.sql.Timestamp;
+import java.util.Properties;
 
 import javax.swing.JPanel;
 
 import org.compiere.grid.ed.VDate;
 import org.compiere.grid.ed.VLookup;
+import org.compiere.model.MBankAccount;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
 import org.compiere.swing.CLabel;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
+import org.compiere.util.Language;
 import org.compiere.util.Msg;
 
 /**
@@ -171,25 +174,47 @@ public class RemittanceParams extends JPanel implements VetoableChangeListener {
 		
 		//Cuenta Bancaria
 		MLookup bankAccountL = MLookupFactory.get (Env.getCtx(), m_WindowNo, 0, 3077, DisplayType.TableDir);
-		vBankAccount = new VLookup ("C_BankAccount_ID", true, false, true, bankAccountL);
+		vBankAccount = new VLookup ("C_BankAccount_ID", true, true, true, bankAccountL);
 		lBankAccount.setText(Msg.translate(Env.getCtx(), "C_BankAccount_ID"));
 		vBankAccount.addVetoableChangeListener(this);
 		lBankAccount.setLabelFor(vBankAccount);
+		vBankAccount.setEnabled(false);
 		
 		//Fecha de Envio
 		lSendDate.setText(Msg.translate(Env.getCtx(), "GenerateDate"));
 		lSendDate.setLabelFor(vSendDate);
-		
+		vSendDate.setMandatory(true);
 		//Fecha de Cargo
 		lExecDate.setText(Msg.translate(Env.getCtx(), "ExecuteDate"));
 		lExecDate.setLabelFor(vExecDate);
+		vExecDate.setMandatory(true);
 		
 	}
 
 	@Override
 	public void vetoableChange(PropertyChangeEvent arg0)
 			throws PropertyVetoException {
-		// TODO Auto-generated method stub
+		if(arg0.getSource().equals(vBank)){
+			
+			int bankid=(Integer)arg0.getNewValue();
+			
+			MLookup bankAccountL;
+			try {
+				//Eliminamos lo que pudiera existir en banco y lo reimprimimos con el valor de banco
+				vBankAccount.removeAll();
+				bankAccountL = MLookupFactory.get (Env.getCtx(), m_WindowNo, 3077, DisplayType.TableDir,Env.getLoginLanguage(Env.getCtx()),MBankAccount.COLUMNNAME_C_BankAccount_ID,0,false,MBankAccount.COLUMNNAME_C_Bank_ID+"="+bankid);
+				vBankAccount = new VLookup (MBankAccount.COLUMNNAME_C_BankAccount_ID, true, false, true, bankAccountL);
+				vBankAccount.addVetoableChangeListener(this);
+				this.add( vBankAccount,new GridBagConstraints( 1,2,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
+				this.validate();
+				this.repaint();
+
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
 		
 	}
 	

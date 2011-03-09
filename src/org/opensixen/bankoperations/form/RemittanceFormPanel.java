@@ -117,6 +117,7 @@ public class RemittanceFormPanel extends JPanel implements FormPanel,ActionListe
     
     private RemittanceResultsSearch results;
     private RemittanceResultsSelected resultsSelected;
+    private RemittanceSearch search;
     
     /**
      * Descripción de Método
@@ -151,6 +152,10 @@ public class RemittanceFormPanel extends JPanel implements FormPanel,ActionListe
 	protected RemittanceResultsSearch getPanelResults(){
 		return results;
 	}
+	
+	protected RemittanceSearch getPanelSearch(){
+		return search;
+	}
 
     void jbInit() throws Exception {
     	//Panel principal
@@ -163,7 +168,7 @@ public class RemittanceFormPanel extends JPanel implements FormPanel,ActionListe
     	resultsSelected= new RemittanceResultsSelected(this);
 
     	//Panel remesas
-    	RemittanceSearch search = new RemittanceSearch(this);
+    	search = new RemittanceSearch(this);
     	
     	//Panel derecho
     	splitRight.setRightComponent(search);
