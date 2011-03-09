@@ -1,4 +1,4 @@
- /******* BEGIN LICENSE BLOCK *****
+/******* BEGIN LICENSE BLOCK *****
  * Versión: GPL 2.0/CDDL 1.0/EPL 1.0
  *
  * Los contenidos de este fichero están sujetos a la Licencia
@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -63,8 +63,6 @@ package org.opensixen.bankoperations.form;
 
 
 import java.awt.BorderLayout;
-import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -84,8 +82,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.event.ListSelectionEvent;
@@ -93,8 +89,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import org.compiere.apps.ConfirmPanel;
-import org.compiere.apps.Waiting;
+
 import org.compiere.grid.ed.VDate;
 import org.compiere.grid.ed.VLookup;
 import org.compiere.minigrid.ColumnInfo;
@@ -102,6 +97,7 @@ import org.compiere.minigrid.IDColumn;
 import org.compiere.minigrid.MiniTable;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
+import org.compiere.swing.CButton;
 import org.compiere.swing.CCheckBox;
 import org.compiere.swing.CLabel;
 import org.compiere.swing.CPanel;
@@ -111,20 +107,17 @@ import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.jdesktop.swingx.JXTaskPane;
-import org.opensixen.model.MRemittance;
 import org.opensixen.model.RVOpenItem;
-import org.opensixen.process.RemittanceCreate;
-import org.opensixen.process.RemittancePayments;
 
 /**
  * 
- * RemittanceResults 
+ * RemittanceResultsSearch
  *
  * @author Alejandro González
  * Nexis Servicios Informáticos http://www.nexis.es
  */
 
-public class RemittanceResults extends JPanel implements VetoableChangeListener,ListSelectionListener,ActionListener,TableModelListener {
+public class RemittanceResultsSearch extends JPanel implements VetoableChangeListener,ListSelectionListener,ActionListener,TableModelListener {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -134,14 +127,14 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 
 	//Paneles y tablas
 	private MiniTable remittance  = new MiniTable();
-	private MiniTable remittanceselect  = new MiniTable();
 	private JXTaskPane searchpane = new JXTaskPane();
-	private JXTaskPane remittanceselectpanel = new JXTaskPane();
-	private ConfirmPanel confirm =  new ConfirmPanel(true);
+	private CPanel remittanceselectpanel = RemittanceResultsSelected.getPanel();
+	private MiniTable remittanceselect= RemittanceResultsSelected.getTable();
 	private CPanel minitablepanel = new CPanel();
 	private CPanel SelectAllPanel = new CPanel();
+	private CPanel defPanel = new CPanel();
+	private CPanel allPanel = new CPanel();
 	protected RemittanceFormPanel ParentPane =null;
-	private Waiting wait;
 	//Organizacion de busqueda
 	private CLabel lOrg = new CLabel();
 	private VLookup vOrg;
@@ -166,6 +159,9 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	private CLabel lDSelectAll = new CLabel();
     private CCheckBox DSelectAll = new CCheckBox();
 	
+    //Refrescar busqueda
+    private CButton vSearch = new CButton(Msg.translate(Env.getCtx(), "Refresh"));
+    
 	//Sql busqueda
 	private String s_sqlWhere=" 1=1";
 	private String s_sqlWhereSelected=" 1=1";
@@ -174,12 +170,12 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	
 	//Variables globales
 	Hashtable<String,String> env = new Hashtable<String,String>();
-	HashMap<Integer,RVOpenItem> list = new HashMap<Integer,RVOpenItem>();
+	static HashMap<Integer,RVOpenItem> list = new HashMap<Integer,RVOpenItem>();
 	private boolean generate=false;
 	int m_WindowNo=0;
 	protected CLogger log = CLogger.getCLogger(getClass());
 
-	public RemittanceResults(){
+	public RemittanceResultsSearch(){
 		fillPicks();
 		initComponents();
 	}
@@ -188,7 +184,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	 * Constructor con panel padre
 	 */
 	
-	public RemittanceResults(RemittanceFormPanel panel){
+	public RemittanceResultsSearch(RemittanceFormPanel panel){
 		ParentPane=panel;
 		fillPicks();
 		initComponents();
@@ -201,21 +197,15 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	private void initComponents(){
 		initsearch();
 		minitablepanel.setLayout(new BorderLayout());
-		remittanceselectpanel.add(new JScrollPane(remittanceselect));
-		remittanceselectpanel.setTitle(Msg.translate(Env.getCtx(), "RemittanceSelect"));
+		remittanceselectpanel = RemittanceResultsSelected.getPanel();
+		remittanceselectpanel.add(new JScrollPane());
 		minitablepanel.add(remittanceselectpanel,BorderLayout.NORTH);
 		minitablepanel.add(SelectAllPanel,BorderLayout.SOUTH);
 		minitablepanel.add(new JScrollPane(remittance),BorderLayout.CENTER);
 
-		confirm.addActionListener(this);
-		//Dimensionado hardcoded
-		remittanceselect.setPreferredScrollableViewportSize(new Dimension(1,200));
-
-
 		this.setLayout(new BorderLayout());
-		this.add( searchpane,BorderLayout.NORTH);
+		this.add( allPanel,BorderLayout.NORTH);
 		this.add(minitablepanel,BorderLayout.CENTER);
-		this.add(confirm,BorderLayout.SOUTH);
 	}
 	
 	/**
@@ -223,23 +213,36 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	 */
 	
 	private void initsearch(){
-		searchpane.setTitle(Msg.translate(Env.getCtx(), "Search"));
+		searchpane.setTitle(Msg.translate(Env.getCtx(), "Filter"));
 		searchpane.setLayout(new GridBagLayout());
+		defPanel.setLayout(new GridBagLayout());
+		allPanel.setLayout(new BorderLayout());
+		
+		defPanel.add( lOrg,new GridBagConstraints( 0,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+		defPanel.add( vOrg,new GridBagConstraints( 1,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
+
 		//Columna,fila,?,?,withx,withy
-		searchpane.add( lOrg,new GridBagConstraints( 0,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
-		searchpane.add( vOrg,new GridBagConstraints( 1,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
-		searchpane.add( lBPartner,new GridBagConstraints( 2,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
-		searchpane.add( vBPartner,new GridBagConstraints( 3,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
-		searchpane.add( lFromInvoiced,new GridBagConstraints( 0,1,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
-		searchpane.add( vFromInvoiced,new GridBagConstraints( 1,1,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
-		searchpane.add( lToInvoiced,new GridBagConstraints( 2,1,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
-		searchpane.add( vToInvoiced,new GridBagConstraints( 3,1,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
+		//searchpane.add( lOrg,new GridBagConstraints( 0,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+		//searchpane.add( vOrg,new GridBagConstraints( 1,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
+		searchpane.add( lFromInvoiced,new GridBagConstraints( 0,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+		searchpane.add( vFromInvoiced,new GridBagConstraints( 1,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
+		searchpane.add( lToInvoiced,new GridBagConstraints( 2,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+		searchpane.add( vToInvoiced,new GridBagConstraints( 3,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
+		searchpane.add( lBPartner,new GridBagConstraints( 0,1,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+		searchpane.add( vBPartner,new GridBagConstraints( 1,1,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
+		searchpane.add( vSearch,new GridBagConstraints( 0,2,1,1,0.3,0.0,GridBagConstraints.CENTER,GridBagConstraints.BOTH,new Insets( 10,10,2,10 ),0,0 ));
+
+		
+		allPanel.add(defPanel,BorderLayout.NORTH);
+		allPanel.add(searchpane,BorderLayout.CENTER);
 		
 		//Inicializamos el panel de seleccionar todos
 		SelectAllPanel.add(lSelectAll);
 		SelectAllPanel.add(SelectAll);
 		SelectAllPanel.add(lDSelectAll);
 		SelectAllPanel.add(DSelectAll);
+		
+		vSearch.addActionListener(this);
 	}
 	
 	/**
@@ -249,7 +252,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	private void fillPicks(){
 		//Organizacion
 		MLookup orgL = MLookupFactory.get (Env.getCtx(), m_WindowNo, 0, 2163, DisplayType.TableDir);
-		vOrg = new VLookup ("AD_Org_ID", false, false, true, orgL);
+		vOrg = new VLookup ("AD_Org_ID", false, true, true, orgL);
 		lOrg.setText(Msg.translate(Env.getCtx(), "AD_Org_ID"));
 		vOrg.addVetoableChangeListener(this);
 		lOrg.setLabelFor(vOrg);
@@ -282,6 +285,9 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		lDSelectAll.setLabelFor(DSelectAll);
 		DSelectAll.setActionCommand("DSelectAll");
 		DSelectAll.addActionListener(this);
+		
+		//Valores por defecto
+		vOrg.setValue(Env.getAD_Org_ID(Env.getCtx()));
 	}
 
 	/**
@@ -296,11 +302,11 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		s_sqlFrom+=" INNER JOIN C_BPartner bp ON(bp.c_bpartner_id=i.c_bpartner_id)";
 		ColumnInfo[] s_layoutRemittance = new ColumnInfo[]{
         		new ColumnInfo(RVOpenItem.ColumnInvoice, "p.C_Invoice_ID", IDColumn.class),
-        		new ColumnInfo(RVOpenItem.ColumnOrg, "g.Name", String.class),
+        		//new ColumnInfo(RVOpenItem.ColumnOrg, "g.Name", String.class),
         		new ColumnInfo(RVOpenItem.ColumnDocumentNo, "i.Documentno", String.class),
         		new ColumnInfo(RVOpenItem.ColumnPartner, "bp.Name", String.class),
-        		new ColumnInfo(RVOpenItem.ColumnDueDate, "DueDate", Date.class),
         		new ColumnInfo(RVOpenItem.ColumnOpenAmt, "OpenAmt", BigDecimal.class),
+        		new ColumnInfo(RVOpenItem.ColumnDueDate, "DueDate", Date.class),
         		new ColumnInfo(RVOpenItem.ColumnSchedule,"p.C_InvoicePaySchedule_ID",Integer.class)};
 		
 		//Reseteamos el modelo de tabla
@@ -403,7 +409,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	
 	public void refreshWhere(){
 
-		s_sqlWhere=" 1=1 AND i.issotrx='Y'";//Mientras no exista la validación xml
+		s_sqlWhere=" 1=1 AND i.issotrx='Y' AND i.ispaid='N' AND i.ad_org_id="+vOrg.getValue();//Mientras no exista la validación xml
 		s_sqlWhereSelected=s_sqlWhere;
 		String PartialWhere="";
 		String PartialWhereSearch="";
@@ -500,6 +506,9 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		env=values;
 	}
 	
+	public static HashMap<Integer,RVOpenItem> getListSelected(){
+		return list;
+	}
 	
 	/**
 	 * Selecciona las filas ya seleccionadas con anterioridad
@@ -555,6 +564,25 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 		}
 		//Una vez seleccionados llamo al refrescar sentencia
 		refreshWhere();
+
+	}
+	
+	private void ChangeTotals(){
+		BigDecimal total=BigDecimal.ZERO;
+		
+		Iterator<Map.Entry<Integer,RVOpenItem>> it = list.entrySet().iterator();
+		//Comprobamos que la lista no sea vacia
+		if(!it.hasNext()){
+			RemittanceResultsSelected.fAmtTotal.setValue(BigDecimal.ZERO);
+			RemittanceResultsSelected.fNumReg.setValue(BigDecimal.ZERO);
+		}
+			
+		while (it.hasNext()) {
+			Map.Entry<Integer,RVOpenItem> e = (Map.Entry<Integer,RVOpenItem>)it.next();
+			total=total.add(e.getValue().getDueAmt());
+		}
+		RemittanceResultsSelected.fAmtTotal.setValue(total);
+		RemittanceResultsSelected.fNumReg.setValue(list.size());
 	}
 	
 	@Override
@@ -607,7 +635,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 
     	if(id.isSelected())
     		list.put(id.getRecord_ID(), new RVOpenItem(id.getRecord_ID(),remittance,row));
-
+    	ChangeTotals();
 	}
 	
 	/**
@@ -620,7 +648,7 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
     	IDColumn id = (IDColumn)remittanceselect.getValueAt(row, 0);
        	if(!id.isSelected())
     		list.remove(id.getRecord_ID());
-    
+       	ChangeTotals();
 	}
 
 	@Override
@@ -634,29 +662,11 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 	 * @return
 	 */
 
-	public MRemittance createRemittanceFile(){
-		RemittanceCreate remittance = new RemittanceCreate(list);
-		remittance.setPanelValues(ParentPane.getPanelParams());
-		return remittance.Create();
-		
-	}
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 
-		if(arg0.getActionCommand().equals(ConfirmPanel.A_OK)){
-			//Creamos Remesa
-			setBusy(true);
-			MRemittance remit=createRemittanceFile();
-			
-			if(remit!=null){
-				RemittancePayments remitpayments= new RemittancePayments();			
-				remitpayments.doIt(remit,true);
-			
-			}
-			setBusy(false);
-		}
-		else if(arg0.getActionCommand().equals(SelectAll.getActionCommand())){
+		if(arg0.getActionCommand().equals(SelectAll.getActionCommand())){
 			//Seleccionamos todos los registros
 			SelectAll(true);
 		}
@@ -664,25 +674,10 @@ public class RemittanceResults extends JPanel implements VetoableChangeListener,
 			//Deseleccionamos todos los registros
 			DSelectAll(false);
 		}
-	}
-	
-	/**
-	 * Espera de proceso remesa
-	 * @param busy
-	 */
-	
-	private void setBusy(boolean busy){
-		if(busy){
-			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-			wait = new Waiting(new JFrame(), Msg.translate(Env.getCtx(), "Processing"), true, 0);
-
-		}
-		else{
-			setCursor(Cursor.getDefaultCursor());
-			wait.dispose();
-			JOptionPane.showMessageDialog(null, Msg.translate(Env.getCtx(), "C_Remittance"), Msg.translate(Env.getCtx(), "RemittanceOK"), JOptionPane.INFORMATION_MESSAGE);
-
+		else if(arg0.getSource().equals(vSearch)){
+			refreshWhere();
 		}
 	}
-	
+
+
 }

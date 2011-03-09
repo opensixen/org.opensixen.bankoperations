@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 

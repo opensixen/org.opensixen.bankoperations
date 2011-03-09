@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -71,6 +71,7 @@ import org.compiere.util.CLogger;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.opensixen.bankoperations.form.RemittanceParams;
+import org.opensixen.bankoperations.form.RemittanceResultsSearch;
 import org.opensixen.model.MRemittance;
 import org.opensixen.model.MRemittanceLine;
 import org.opensixen.model.RVOpenItem;
@@ -108,7 +109,9 @@ public class RemittanceCreate {
 	 * Constructor por defecto
 	 */
 	
-	public RemittanceCreate(){}
+	public RemittanceCreate(){
+		invoicelist=RemittanceResultsSearch.getListSelected();
+	}
 	
 	/**
 	 * Creamos la remesa
@@ -122,7 +125,6 @@ public class RemittanceCreate {
 			//Si no existen lineas seleccionadas no creamos la remesa
 			return null;
 		}
-
 		MRemittance remit = new MRemittance(Env.getCtx(),0,TrxName);
 		//Norma
 		remit.setC_BankRegulation_ID((Integer)params.getBankRegulation());

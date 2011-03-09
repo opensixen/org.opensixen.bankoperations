@@ -32,7 +32,7 @@
  *
  * El desarrollador/es inicial/es del código es
  *  FUNDESLE (Fundación para el desarrollo del Software Libre Empresarial).
- *  Indeos Consultoria S.L. - http://www.indeos.es
+ *  Nexis Servicios Informáticos S.L. - http://www.nexis.es
  *
  * Contribuyente(s):
  *  Alejandro González <alejandro@opensixen.org> 
@@ -61,6 +61,7 @@
 package org.opensixen.bankoperations.form;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
@@ -112,10 +113,10 @@ public class RemittanceFormPanel extends JPanel implements FormPanel,ActionListe
      * Descripción de paneles
      */
     private JSplitPane splitp = new JSplitPane();
-    private JSplitPane splitleft = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+    private JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     
-    private RemittanceParams params;
-    private RemittanceResults results;
+    private RemittanceResultsSearch results;
+    private RemittanceResultsSelected resultsSelected;
     
     /**
      * Descripción de Método
@@ -141,44 +142,45 @@ public class RemittanceFormPanel extends JPanel implements FormPanel,ActionListe
 	    }
 	}
 	
-	/**
-	 * Retorna el panel de parametros
-	 * @return 
-	 */
-	
-	protected RemittanceParams getPanelParams(){
-		return params;
-	}
-	
+
 	/**
 	 * Retorna el panel de resultados de posibles facturas
 	 * @return 
 	 */
 	
-	protected RemittanceResults getPanelResults(){
+	protected RemittanceResultsSearch getPanelResults(){
 		return results;
 	}
 
     void jbInit() throws Exception {
     	//Panel principal
-    	splitp.setDividerLocation(.75);
+ 
     	splitp.setOneTouchExpandable(true);
-    	//splitp.setDividerSize(arg0)
-    	//Panel norma
-    	params= new RemittanceParams(); 	
+    	splitRight.setOneTouchExpandable(true);
     	
     	//Panel registros
-    	results= new RemittanceResults(this);
-    	splitp.setRightComponent(results);
-    	
+    	results= new RemittanceResultsSearch(this);
+    	resultsSelected= new RemittanceResultsSelected(this);
+
     	//Panel remesas
     	RemittanceSearch search = new RemittanceSearch(this);
     	
-    	//Panel izquierdo
-    	splitleft.setLeftComponent(params);
-    	splitleft.setRightComponent(search);
+    	//Panel derecho
+    	splitRight.setRightComponent(search);
+    	splitRight.setLeftComponent(resultsSelected);
+
+    	splitp.setRightComponent(splitRight);
+    	splitp.setLeftComponent(results);
     	
-    	splitp.setLeftComponent(splitleft);
+    	//Dimensiones de los split
+    	Dimension minimumSize = new Dimension(0, 0);
+    	splitRight.getRightComponent().setMinimumSize(minimumSize);
+    	splitRight.getLeftComponent().setMinimumSize(minimumSize);
+
+    	splitp.getLeftComponent().setMinimumSize(new Dimension(450, 0));
+    	splitRight.setDividerLocation(0.99);
+    	splitRight.setResizeWeight(1.0);
+
 
     }    // jbInit
 
