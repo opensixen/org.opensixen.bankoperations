@@ -140,15 +140,18 @@ public class RemittanceCreate {
 			JOptionPane.showMessageDialog(null, Msg.translate(Env.getCtx(), "Remittance Processed"), Msg.translate(Env.getCtx(), "Remittance Processed"), JOptionPane.ERROR_MESSAGE);
 			return null;
 		}
-		if(!remit.save())
+
+		if(!remit.save(TrxName))
 			return null;
-		
+
 		if(!CreateLines(remit))
 			return null;
 		//Actualizamos el total de la remesa despues de generar las lineas
+
 		remit.refreshTotal();
-		remit.save();
-		
+
+		remit.save(TrxName);
+
 		//Creamos el archivo de remesa
 		new RemittanceCreateFile(remit);
 		

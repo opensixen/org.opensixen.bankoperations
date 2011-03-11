@@ -271,7 +271,8 @@ public class MRemittance extends X_C_Remittance implements DocAction {
 		
 		BigDecimal total=BigDecimal.ZERO;
 		//Por todas las lineas
-		for(MRemittanceLine line :getLines(false)){
+		for(MRemittanceLine line :getLines(true)){
+			System.out.println("Total de cada linea="+line.getGrandTotal());
 			total=total.add(line.getGrandTotal());
 		}
 		
@@ -287,7 +288,6 @@ public class MRemittance extends X_C_Remittance implements DocAction {
 	
 	protected boolean beforeSave (boolean newRecord)
 	{
-
 		return true;
 	}
 

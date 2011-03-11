@@ -238,7 +238,6 @@ public class RemittanceResultsSelected extends JPanel implements ActionListener 
 			}
 		}else if(arg0.getSource().equals(BPostRemittance)){
 			if(ParentPane!=null){
-				System.out.println("Al intentar completar una remesa");
 				RemittanceSearch search = ParentPane.getPanelSearch();
 				MRemittance remit;
 				//Creamos Remesa
@@ -246,7 +245,6 @@ public class RemittanceResultsSelected extends JPanel implements ActionListener 
 				//Comprobamos que la remesa sea posible completar, es decir que tenga el estado borrador
 				//y exista una remesa seleccionada
 				remit = new MRemittance(Env.getCtx(),search.getSelectedRow(),null);
-				System.out.println("La remesa que coge es="+search.getSelectedRow());
 				//Completamos la remesa
 				if(remit!=null && (remit.getDocStatus().equals(DocAction.STATUS_Drafted) || remit.getDocStatus().equals(DocAction.STATUS_InProgress) )){
 					RemittancePayments remitpayments= new RemittancePayments();			
