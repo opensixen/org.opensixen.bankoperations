@@ -79,6 +79,8 @@ import org.compiere.apps.ConfirmPanel;
 import org.compiere.apps.Waiting;
 import org.compiere.grid.ed.VNumber;
 import org.compiere.minigrid.MiniTable;
+import org.compiere.process.DocAction;
+import org.compiere.swing.CButton;
 import org.compiere.swing.CLabel;
 import org.compiere.swing.CPanel;
 import org.compiere.util.CLogger;
@@ -108,7 +110,8 @@ public class RemittanceResultsSelected extends JPanel implements ActionListener 
 	//Paneles y tablas
 	private static MiniTable remittanceselect  = new MiniTable();
 	private static CPanel remittanceselectpanel = new CPanel();
-	private ConfirmPanel confirm =  new ConfirmPanel(true);
+//	private ConfirmPanel confirm =  new ConfirmPanel(true);
+	private CPanel buttonsPanel = new CPanel();
 	private CPanel minitablepanel = new CPanel();
 	private CPanel totalsPanel = new CPanel();
 	private JXTaskPane ParamsPanel = new JXTaskPane();
@@ -125,6 +128,9 @@ public class RemittanceResultsSelected extends JPanel implements ActionListener 
 
 	private CLabel lNumReg;
 	protected static VNumber fNumReg;
+	
+	private CButton BGenerateFile = new CButton(Msg.translate(Env.getCtx(), "GenerateFile"));
+	private CButton BPostRemittance = new CButton(Msg.translate(Env.getCtx(), "Post Remittance"));
 	
 	public RemittanceResultsSelected(){
 		initComponents();
@@ -150,7 +156,12 @@ public class RemittanceResultsSelected extends JPanel implements ActionListener 
 		minitablepanel.add(new JScrollPane(remittanceselect),BorderLayout.CENTER);
 
 		ParamsPanel.setTitle(Msg.translate(Env.getCtx(), "Params"));
-		confirm.addActionListener(this);
+		
+		BGenerateFile.addActionListener(this);
+		BPostRemittance.addActionListener(this);
+		
+		buttonsPanel.add(BGenerateFile);
+		buttonsPanel.add(BPostRemittance);
 		
 		totalsPanel.setLayout(new GridBagLayout());
 		totalsPanel.add( lAmtTotal,new GridBagConstraints( 0,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
@@ -159,7 +170,7 @@ public class RemittanceResultsSelected extends JPanel implements ActionListener 
 		totalsPanel.add( lNumReg,new GridBagConstraints( 2,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
 		totalsPanel.add( fNumReg,new GridBagConstraints( 3,0,1,1,0.3,0.0,GridBagConstraints.WEST,GridBagConstraints.BOTH,new Insets( 2,2,2,20 ),0,0 ));
 		
-		totalsPanel.add( confirm,new GridBagConstraints( 0,1,1,1,0.0,0.0,GridBagConstraints.EAST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
+		totalsPanel.add( buttonsPanel,new GridBagConstraints( 0,1,1,1,0.0,0.0,GridBagConstraints.EAST,GridBagConstraints.NONE,new Insets( 2,2,2,2 ),0,0 ));
 		ParamsPanel.add(params);
 		
 		this.setLayout(new BorderLayout());
@@ -200,28 +211,51 @@ public class RemittanceResultsSelected extends JPanel implements ActionListener 
 	 */
 
 	public MRemittance createRemittanceFile(){
+		return createRemittanceFile(0);
+		
+	}
+	
+	public MRemittance createRemittanceFile(int remittance_id){
 		RemittanceCreate remittance = new RemittanceCreate();
 		remittance.setPanelValues(params);
-		return remittance.Create();
+		return remittance.Create(remittance_id);
 		
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 
-		if(arg0.getActionCommand().equals(ConfirmPanel.A_OK)){
-			//Creamos Remesa
-			setBusy(true);
-			MRemittance remit=createRemittanceFile();
-			
-			if(remit!=null){
-				RemittancePayments remitpayments= new RemittancePayments();			
-				remitpayments.doIt(remit,true);
-				//Una vez acabados los procesos pasamos la remesa creada al listado actualizado
-				if(ParentPane!=null){
-					RemittanceSearch search = ParentPane.getPanelSearch();
-					search.getRemittanceLookup().refresh();
+		if(arg0.getSource().equals(BGenerateFile)){
+			//Comprobar si ya existe la remesa y estamos editando o la creamos nueva
+			//Si existe una remesa seleccionada en el panel de remesas es que estamos editando, en otro caso creando nueva
+			if(ParentPane!=null){
+				MRemittance remit;
+				RemittanceSearch search = ParentPane.getPanelSearch();
+				if(search.getSelectedRow()==-1)
+					remit=createRemittanceFile();
+				else
+					remit=createRemittanceFile(search.getSelectedRow());
+			}
+		}else if(arg0.getSource().equals(BPostRemittance)){
+			if(ParentPane!=null){
+				System.out.println("Al intentar completar una remesa");
+				RemittanceSearch search = ParentPane.getPanelSearch();
+				MRemittance remit;
+				//Creamos Remesa
+				setBusy(true);
+				//Comprobamos que la remesa sea posible completar, es decir que tenga el estado borrador
+				//y exista una remesa seleccionada
+				remit = new MRemittance(Env.getCtx(),search.getSelectedRow(),null);
+				System.out.println("La remesa que coge es="+search.getSelectedRow());
+				//Completamos la remesa
+				if(remit!=null && (remit.getDocStatus().equals(DocAction.STATUS_Drafted) || remit.getDocStatus().equals(DocAction.STATUS_InProgress) )){
+					RemittancePayments remitpayments= new RemittancePayments();			
+					remitpayments.doIt(remit,true);
 				}
+			
+				//Una vez acabados los procesos pasamos la remesa creada al listado actualizado
+			
+				search.getRemittanceLookup().refresh();
 			}
 			setBusy(false);
 		}

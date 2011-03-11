@@ -117,7 +117,7 @@ public class RemittanceCreate {
 	 * Creamos la remesa
 	 * @return
 	 */
-	public MRemittance Create(){
+	public MRemittance Create(int Remittance_ID){
 		if(!checkValues()){
 			return null;
 		}
@@ -125,7 +125,7 @@ public class RemittanceCreate {
 			//Si no existen lineas seleccionadas no creamos la remesa
 			return null;
 		}
-		MRemittance remit = new MRemittance(Env.getCtx(),0,TrxName);
+		MRemittance remit = new MRemittance(Env.getCtx(),Remittance_ID,TrxName);
 		//Norma
 		remit.setC_BankRegulation_ID((Integer)params.getBankRegulation());
 		//Cuenta bancaria
@@ -136,6 +136,10 @@ public class RemittanceCreate {
 		//Fecha de cargo
 		remit.setExecuteDate(params.getExecuteDate());
 
+		if(!remit.deleteLines()){
+			JOptionPane.showMessageDialog(null, Msg.translate(Env.getCtx(), "Remittance Processed"), Msg.translate(Env.getCtx(), "Remittance Processed"), JOptionPane.ERROR_MESSAGE);
+			return null;
+		}
 		if(!remit.save())
 			return null;
 		

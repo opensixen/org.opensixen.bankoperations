@@ -72,8 +72,12 @@ import java.util.Properties;
 import javax.swing.JOptionPane;
 
 import org.compiere.model.I_C_DocType;
+import org.compiere.model.MDocType;
+import org.compiere.model.ModelValidationEngine;
+import org.compiere.model.ModelValidator;
 import org.compiere.process.DocAction;
 import org.compiere.process.DocumentEngine;
+import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.compiere.util.TimeUtil;
@@ -118,14 +122,14 @@ public class MRemittance extends X_C_Remittance implements DocAction {
 			JOptionPane.showMessageDialog(null, Msg.translate(Env.getCtx(), "NoDoctype"), Msg.translate(Env.getCtx(), "NoDoctype"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		
+
 		this.setTotalAmt(BigDecimal.ZERO);
 		this.setGenerateDate(today);
 		this.setExecuteDate(today);
 		this.setC_DocTypeTarget_ID(doctype.getC_DocType_ID());
 		this.setC_DocType_ID(0);
-		this.setDocAction(DocAction.ACTION_Complete);
-		this.setDocStatus(DocAction.STATUS_Drafted);
+		setDocStatus(DOCSTATUS_Drafted);
+		setDocAction (DOCACTION_Complete);
 	}
 	
 	
@@ -171,21 +175,27 @@ public class MRemittance extends X_C_Remittance implements DocAction {
 	public void setProcessed (boolean processed)
 	{
 		super.setProcessed (processed);
+		if (get_ID() == 0)
+			return;
+		String set = "SET Processed='"
+			+ (processed ? "Y" : "N")
+			+ "' WHERE C_Remittance_ID=" + getC_Remittance_ID();
+		int noLine = DB.executeUpdate("UPDATE C_RemittanceLine " + set, get_TrxName());
+		log.fine(processed + " - Lines=" + noLine);
 		
 	}	//	setProcessed
 
 
 	@Override
 	public void setDocStatus(String newStatus) {
-		// TODO Auto-generated method stub
+		super.setDocStatus(newStatus);
 		
 	}
 
 
 	@Override
 	public String getDocStatus() {
-		// TODO Auto-generated method stub
-		return null;
+		return super.getDocStatus();
 	}
 
 
@@ -205,40 +215,55 @@ public class MRemittance extends X_C_Remittance implements DocAction {
 
 	@Override
 	public boolean invalidateIt() {
-		//setDocAction(DocAction.ACTION_Prepare);
+		log.info("invalidateIt - " + toString());
+		setDocAction(DOCACTION_Prepare);
 		return true;
 	}
 
 
 	@Override
 	public String prepareIt() {
-		// TODO Auto-generated method stub
-		return null;
+		String m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_PREPARE);
+		if (m_processMsg != null)
+			return DocAction.STATUS_Invalid;
+
+		if (!DOCACTION_Complete.equals(getDocAction()))
+			setDocAction(DOCACTION_Complete);
+		return DocAction.STATUS_InProgress;
+		
 	}
 
 
 	@Override
 	public boolean approveIt() {
-		// TODO Auto-generated method stub
-		return false;
+		log.info(toString());
+		return true;
 	}
 
 
 	@Override
 	public boolean rejectIt() {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 
 	@Override
 	public String completeIt() {
 		// TODO Auto-generated method stub
-		
-		//Dejar el estado a completo
-		setDocStatus(ACTION_Complete);
-		setDocAction(ACTION_Close);
-		return null;
+		String m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_BEFORE_COMPLETE);
+		if (m_processMsg != null)
+			return DocAction.STATUS_Invalid;
+		approveIt();
+		String valid = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_COMPLETE);
+		if (valid != null)
+		{
+			m_processMsg = valid;
+			return DocAction.STATUS_Invalid;
+		}
+		setProcessed(true);
+		setDocAction(DOCACTION_Close);
+		return DocAction.STATUS_Completed;
 	}
 
 	
@@ -268,35 +293,81 @@ public class MRemittance extends X_C_Remittance implements DocAction {
 
 	@Override
 	public boolean voidIt() {
-		// TODO Auto-generated method stub
-		return false;
+		String m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_VOID);
+		if (m_processMsg != null)
+			return false;
+		
+		// After Void
+		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_VOID);
+		if (m_processMsg != null)
+			return false;
+
+		setProcessed(true);
+		setDocAction(DOCACTION_None);
+		return true;
 	}
 
 
 	@Override
 	public boolean closeIt() {
-		// TODO Auto-generated method stub
-		return false;
+		// Before Close
+		String m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_CLOSE);
+		if (m_processMsg != null)
+			return false;
+
+		setProcessed(true);
+		setDocAction(DOCACTION_None);
+
+		// After Close
+		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_CLOSE);
+		if (m_processMsg != null)
+			return false;
+		return true;
 	}
 
 
 	@Override
 	public boolean reverseCorrectIt() {
-		// TODO Auto-generated method stub
-		return false;
+		// After reverseCorrect
+		String m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_REVERSECORRECT);
+		if (m_processMsg != null)
+			return false;
+
+		return true;
 	}
 
 
 	@Override
 	public boolean reverseAccrualIt() {
-		// TODO Auto-generated method stub
+		log.info(toString());
+		// Before reverseAccrual
+		String m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_REVERSEACCRUAL);
+		if (m_processMsg != null)
+			return false;
+
+		// After reverseAccrual
+		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_REVERSEACCRUAL);
+		if (m_processMsg != null)
+			return false;
+
 		return false;
 	}
 
 
 	@Override
 	public boolean reActivateIt() {
-		// TODO Auto-generated method stub
+		log.info(toString());
+		// Before reActivate
+		String m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_REACTIVATE);
+		if (m_processMsg != null)
+			return false;
+
+		// After reActivate
+		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_REACTIVATE);
+		if (m_processMsg != null)
+			return false;
+
+
 		return false;
 	}
 
@@ -310,14 +381,14 @@ public class MRemittance extends X_C_Remittance implements DocAction {
 
 	@Override
 	public String getDocumentInfo() {
-		// TODO Auto-generated method stub
-		return null;
+		MDocType dt = MDocType.get(getCtx(), getC_DocType_ID());
+		return dt.getName() + " " + getDocumentNo();
 	}
 
 
 	@Override
 	public File createPDF() {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
@@ -332,7 +403,7 @@ public class MRemittance extends X_C_Remittance implements DocAction {
 	@Override
 	public int getDoc_User_ID() {
 		// TODO Auto-generated method stub
-		return 0;
+		return getCreatedBy();
 	}
 
 
@@ -346,24 +417,8 @@ public class MRemittance extends X_C_Remittance implements DocAction {
 	@Override
 	public BigDecimal getApprovalAmt() {
 		// TODO Auto-generated method stub
-		return null;
+		return getTotalAmt();
 	}
-
-
-	@Override
-	public String getDocAction() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	/**
-	 * 	Set DocAction
-	 *	@param DocAction doc action
-	 */
-	public void setDocAction (String DocAction)
-	{
-		setDocAction (DocAction, false);
-	}	//	setDocAction
 	
 	/**
 	 * 	Set DocAction
@@ -374,5 +429,18 @@ public class MRemittance extends X_C_Remittance implements DocAction {
 	{
 		super.setDocAction (DocAction);
 	}	//	setDocAction
+
+	/**
+	 * Eliminamos las lineas de la remesa
+	 * @return
+	 */
+	
+	public boolean deleteLines() {
+		for(MRemittanceLine line : getLines(true)){
+			if(!line.delete(false))
+				return false;
+		}
+		return true;
+	}
 	
 }

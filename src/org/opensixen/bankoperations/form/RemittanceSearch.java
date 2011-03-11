@@ -363,8 +363,15 @@ public class RemittanceSearch extends JPanel implements VetoableChangeListener,L
 
 
 	public int getSelectedRow(){
-		IDColumn id =(IDColumn) remittance.getValueAt(remittance.getSelectedRow(), 0);
-		return id.getRecord_ID() ;
+		
+		for(int i=0;i<remittance.getRowCount();i++){
+			IDColumn id =(IDColumn) remittance.getValueAt(i, 0);
+			
+			if(id.isSelected())
+				return id.getRecord_ID();
+		}
+		
+		return -1 ;
 	}
 
 	@Override
@@ -418,6 +425,7 @@ public class RemittanceSearch extends JPanel implements VetoableChangeListener,L
 		}
 		
 	}
+	
 	
 	protected VLookup getRemittanceLookup(){
 		return vRemittance;

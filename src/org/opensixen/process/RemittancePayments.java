@@ -108,6 +108,7 @@ public class RemittancePayments {
 				
 				try {
 					remittance.processIt( MRemittance.ACTION_Complete );
+					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
